@@ -24,7 +24,7 @@ from functools import reduce
 
 fields = ['label', 'timestamp', 'reason', 'outcome', 'duration', 'repository',
           'main_file', 'version', 'script_arguments', 'executable',
-          'parameters', 'input_data', 'launch_mode', 'output_data',
+          'parameters', 'input_data', 'launch_mode', 'evaluation_data', 'output_data',
           'user', 'tags', 'repeats']
 
 
@@ -90,6 +90,12 @@ def record2dict(record):
         },
         "outcome": record.outcome or "",
         "stdout_stderr": record.stdout_stderr,  # added in 0.4
+        "evaluation_data": [{  # added in 0.8
+            "path": key.path,
+            "digest": key.digest,
+            "metadata": key.metadata,
+            "creation": None if key.creation is None else key.creation.strftime("%Y-%m-%d %H:%M:%S")  # added in 0.7
+        } for key in record.evaluation_data],
         "output_data": [{  # added in 0.4 (replaced 'data_key', which was a string)
             "path": key.path,
             "digest": key.digest,
