@@ -2,3 +2,5 @@ A moving_filesystem_data_store that moves files found in datastore to a given lo
 
 A moving_filesystem_data_store can be setup via "smt init (/configure) --move (/-MO) /target/path/
 
+An additional feature to add files to a record was implemented. This was done to enable the user to even better "keep his stuff together" in the sense that 
+To enable the adding of files to a record a new category for records has been implemented called "evaluation_data".
