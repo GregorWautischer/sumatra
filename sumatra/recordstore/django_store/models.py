@@ -32,7 +32,7 @@ class SumatraObjectsManager(models.Manager):
         # want to store in a single table in the database.
         # might be better to specify the list of field names explicitly
         # as an argument to the Manager __init__().
-        excluded_fields = ('id', 'record', 'input_to_records', 'output_from_record', 'output_from_record_id')
+        excluded_fields = ('id', 'record', 'input_to_records', 'output_from_record', 'output_from_record_id', 'evaluation_of_record', 'evaluation_of_record_id')
         field_names = set(self.model._meta.get_all_field_names()).difference(excluded_fields)
         attributes = {}
         for name in field_names:
@@ -199,7 +199,8 @@ class DataKey(BaseModel):
     metadata = models.TextField(blank=True)
     output_from_record = models.ForeignKey('Record', related_name='output_data',
                                            null=True)
-
+    evaluation_of_record = models.ForeignKey('Record', related_name='evaluation_data',
+                                           null=True)
     class Meta(object):
         ordering = ('path',)
 
@@ -294,6 +295,8 @@ class Record(BaseModel):
         record.outcome = self.outcome
         record.tags = set(tag.name for tag in Tag.objects.get_for_object(self))
         record.output_data = [key.to_sumatra() for key in self.output_data.all()]
+        record.evaluation_data = [key.to_sumatra() for key in self.evaluation_data.all()]
+        #record.evaluation_data = self.evaluation_data
         record.dependencies = [dep.to_sumatra() for dep in self.dependencies.all()]
         record.platforms = [pi.to_sumatra() for pi in self.platforms.all()]
         record.repeats = self.repeats
