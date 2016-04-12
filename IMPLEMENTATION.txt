@@ -2,5 +2,14 @@ A moving_filesystem_data_store that moves files found in datastore to a given lo
 
 A moving_filesystem_data_store can be setup via "smt init (/configure) --move (/-MO) /target/path/
 
-An additional feature to add files to a record was implemented. This was done to enable the user to even better "keep his stuff together" in the sense that 
-To enable the adding of files to a record a new category for records has been implemented called "evaluation_data".
+An additional feature to add files to a record was implemented. This was done to enable the user to keep track of post processing data belonging to a simulation using Sumatra.
+To enable the adding of files to a record a new category for records has been implemented called "evaluation_data" and two functions called add_evaluation_data and remove_evaluation_data have been added in projects.py.
+
+Syntax:
+
+project.add_evaluation_data(recordlabel, filename)
+project.remove_evaluation_data(recordlabel, sumatra.datastore.base.DataKey, delete=True/False)
+(where project comes from project=load_project())
+
+add_evaluation_data adds a file to a record (identified by its label) and moves the file to the record's data store if outside of it.
+remove_evaluation_data removes a file from a record and deletes it if delete=True (False by default). 
