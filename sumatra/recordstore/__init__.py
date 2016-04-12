@@ -35,7 +35,6 @@ from ..core import get_registered_components
 
 DefaultRecordStore = have_django and DjangoRecordStore or ShelveRecordStore
 
-
 def get_record_store(uri):
     """
     Return the :class:`RecordStore` object found at the given URI (which may be
