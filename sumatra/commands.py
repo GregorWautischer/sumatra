@@ -143,6 +143,7 @@ def init(argv):
     datastore.add_argument('-W', '--webdav', metavar='URL', help="specify a webdav URL (with username@password: if needed) as the archiving location for data")
     datastore.add_argument('-A', '--archive', metavar='PATH', help="specify a directory in which to archive output datafiles. If not specified, or if 'false', datafiles are not archived.")
     datastore.add_argument('-M', '--mirror', metavar='URL', help="specify a URL at which your datafiles will be mirrored.")
+    datastore.add_argument('-MO', '--move', metavar='PATH', help="specify a directory to which to move output datafiles. If not specified, or if 'false', datafiles are not moved.")
 
     args = parser.parse_args(argv)
 
@@ -189,6 +190,10 @@ def init(argv):
         output_datastore = get_data_store("ArchivingFileSystemDataStore", {"root": args.datapath, "archive": args.archive})
     elif args.mirror:
         output_datastore = get_data_store("MirroredFileSystemDataStore", {"root": args.datapath, "mirror_base_url": args.mirror})
+    elif args.move and args.move.lower() != 'false':
+        if os.path.expanduser(args.move)==args.move:
+            args.move=os.path.normpath(os.path.abspath(args.move))
+        output_datastore = get_data_store("MovingFileSystemDataStore", {"root": args.datapath, "movepath": args.move})
     else:
         output_datastore = get_data_store("FileSystemDataStore", {"root": args.datapath})
     input_datastore = get_data_store("FileSystemDataStore", {"root": args.input})
@@ -210,8 +215,9 @@ def init(argv):
                       label_generator=args.labelgenerator,
                       timestamp_format=args.timestamp_format)
     if os.path.exists('.smt') and project.record_store.has_project(project.name):
-        with open('.smt/labels', 'w') as f:
-            f.write('\n'.join(project.get_labels()))
+        f = open('.smt/labels', 'w')
+        f.writelines(project.format_records(tags=None, mode='short', format='text', reverse=False))
+        f.close()
     project.save()
 
 
@@ -241,6 +247,7 @@ def configure(argv):
     datastore.add_argument('-W', '--webdav', metavar='URL', help="specify a webdav URL (with username@password: if needed) as the archiving location for data")
     datastore.add_argument('-A', '--archive', metavar='PATH', help="specify a directory in which to archive output datafiles. If not specified, or if 'false', datafiles are not archived.")
     datastore.add_argument('-M', '--mirror', metavar='URL', help="specify a URL at which your datafiles will be mirrored.")
+    datastore.add_argument('-MO', '--move', metavar='PATH', help="specify a directory to which to move output datafiles. If not specified, or if 'false', datafiles are not moved.")
 
     parser.add_argument('--add-plugin', help="name of a Python module containing one or more plug-ins.")
     parser.add_argument('--remove-plugin', help="name of a plug-in module to remove from the project.")
@@ -274,6 +281,21 @@ def configure(argv):
         project.data_store = get_data_store("DavFsDataStore",
                                             {"root": project.data_store.root, "dav_url": args.webdav})
         project.data_store.archive_store = '.smt/archive'
+    elif args.move:
+        if hasattr(project.data_store, 'move_store'):  # current data store is moving
+            if args.move.lower() == 'false':
+                project.data_store = get_data_store("FileSystemDataStore",
+                                                    {"root": project.data_store.root})
+            else:
+                if os.path.expanduser(args.move)==args.move:
+                    args.move=os.path.normpath(os.path.abspath(args.move))
+                project.data_store.move_store = args.move
+        else: # current data store is not moving
+            if args.move.lower() != 'false':
+                if os.path.expanduser(args.move)==args.move:
+                    args.move=os.path.normpath(os.path.abspath(args.move))
+                project.data_store = get_data_store("MovingFileSystemDataStore",
+                                                    {"root": project.data_store.root, "movepath":args.move})
     if args.input:
         project.input_datastore.root = args.input
     if args.repository:
@@ -406,9 +428,6 @@ def run(argv):
         sys.exit(1)
     if args.tag:
         project.add_tag(run_label, args.tag)
-    if os.path.exists('.smt'):
-        with open('.smt/labels', 'w') as f:
-            f.write('\n'.join(project.get_labels()))
 
 
 def list(argv):  # add 'report' and 'log' as aliases
@@ -444,7 +463,6 @@ def list(argv):  # add 'report' and 'log' as aliases
     if args.main_file is not None: kwargs['main_file__startswith'] = args.main_file
     print(project.format_records(**kwargs))
 
-
 def delete(argv):
     """Delete records or records with a particular tag from a project."""
     usage = "%(prog)s delete [options] LIST"
@@ -477,9 +495,7 @@ def delete(argv):
                 project.delete_record(label, delete_data=args.data)
             except Exception:  # could be KeyError or DoesNotExist: should create standard NoSuchRecord or RecordDoesNotExist exception
                 warnings.warn("Could not delete record '%s' because it does not exist" % label)
-    if os.path.exists('.smt'):
-        with open('.smt/labels', 'w') as f:
-            f.write('\n'.join(project.get_labels()))
+
 
 def comment(argv):
     """Add a comment to an existing record."""
