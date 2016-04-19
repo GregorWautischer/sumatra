@@ -324,7 +324,7 @@ class DjangoRecordStore(RecordStore):
         if not db_config.configured:
             db_config.configure()
         #management.call_command('sqlclear', 'django_store', database=self._db_label)  # this produces coloured output, need no_color option from Django 1.7
-        cmds = ["BEGIN;"] + ['DROP TABLE "django_store_{0}" CASCADE;'.format(x)
+        cmds = ["BEGIN;"] + ['DROP TABLE "django_store_{0}"{1};'.format(x, " CASCADE" if not 'sqlite3' in db_config.engine else "")
                              for x in ("record", "record_input_data", "record_dependencies",
                                        "record_platforms", "platforminformation", "datakey", "datastore", "launchmode",
                                        "parameterset", "repository", "dependency", "executable", "project")] + ["COMMIT;"]
