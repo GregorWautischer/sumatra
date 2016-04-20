@@ -350,6 +350,9 @@ class Project(object):
             raise Exception("File %s already present in record's evaluation_data" % filename)
         if hasattr(record.datastore, 'archive_store'):
             raise NotImplementedError("Adding files to archives not supported.")
+        elif hasattr(record.datastore, 'move_store'):
+            rootpath=os.path.expanduser(record.datastore.move_store)
+            copypath=os.path.join(os.path.expanduser(record.datastore.move_store),label)
         else:
             rootpath=record.datastore.root
             copypath=record.datastore.root
