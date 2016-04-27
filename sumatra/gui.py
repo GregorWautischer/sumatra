@@ -156,7 +156,7 @@ class TreeFrame(tk.Frame):
                     #childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] for j in range(0,len(item))]
                     #childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] if not isinstance(item[j][i],list) else item[j][i][-1][:re.search('\d', item[j][i][-1]).start()] for j in range(0,len(item))]
                     #childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] if not isinstance(item[j][i],list) else item[j][i][-1][:item[j][i][-1].rfind('0')]+'...'+item[j][i][-1][item[j][i][-1].rfind('.'):] for j in range(0,len(item))]
-                    childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] if not isinstance(item[j][i],list) else re.sub(re.findall('\d+',item[j][i][0])[-1],'.',item[j][i][0] for j in range(0,len(item))]
+                    childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] if not isinstance(item[j][i],list) else re.sub(re.findall('\d+',item[j][i][0])[-1],'.',item[j][i][0]) for j in range(0,len(item))]
                     child=self.tree.insert(parent,'end',values=childitem)
                     meas=[Font().measure(el) for el in childitem]
 
