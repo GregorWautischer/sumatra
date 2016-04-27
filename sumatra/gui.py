@@ -7,6 +7,38 @@ import os, sys, inspect, string, copy, re
 import numpy as np
 
 
+class PopupWindow(object):
+
+    def __init__(self, master=None, title='PopPop'):
+
+        self.pop = tk.Toplevel(master)
+        self.pop.title(title)
+
+
+class InputWindow(tk.Frame):
+
+    def __init__(self, master=None,title='', text=''):
+
+        self.window = PopupWindow(master=master, title=title).pop
+
+        self.master = master
+        self.text = text
+
+        self.stringvar= tk.StringVar()
+        self.label=tk.Label(self.window, text=self.text)
+        self.entry = tk.Entry(self.window, width=50, textvariable=self.stringvar)
+        self.okbutton=tk.Button(self.window,text='OK', command=self.set_variable)
+        self.exitbutton=tk.Button(self.window,text='Exit', command=self.window.destroy)
+
+        self.label.grid(column=0,row=0)
+        self.entry.grid(column=1,row=0)
+        self.okbutton.grid(column=2,row=0)
+        self.exitbutton.grid(column=3,row=0)
+ 
+    def set_variable(self):
+        if self.stringvar.get()!='':
+            self.master.variable.set(self.stringvar.get())
+            self.window.destroy()
 
 class LoadDirectoryPanel(tk.Frame):
     #Panel featuring a text field to enter a path, a browse button and an open button. The path of the chosen directory is shown in the text field.
