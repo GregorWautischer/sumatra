@@ -304,7 +304,7 @@ class SumatraTree(tk.Frame):
         self.projectstatustext=tk.StringVar()
         self.projectstatustext.set("No project loaded!")
 
-        self.standardcolumns=['label','timestamp','tags','reason','parameters','output_data', 'evaluation_data']
+        self.standardcolumns=['label','timestamp','tags','reason','parameters','output_data']
 
         self.changecolumn=tk.StringVar()
 
