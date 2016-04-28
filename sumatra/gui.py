@@ -10,7 +10,6 @@ import numpy as np
 class PopupWindow(object):
 
     def __init__(self, master=None, title='PopPop'):
-
         self.pop = tk.Toplevel(master)
         self.pop.title(title)
 
@@ -18,7 +17,6 @@ class PopupWindow(object):
 class InputWindow(tk.Frame):
 
     def __init__(self, master=None,title='', text=''):
-
         self.window = PopupWindow(master=master, title=title).pop
 
         self.master = master
@@ -34,7 +32,7 @@ class InputWindow(tk.Frame):
         self.entry.grid(column=1,row=0)
         self.okbutton.grid(column=2,row=0)
         self.exitbutton.grid(column=3,row=0)
- 
+
     def set_variable(self):
         if self.stringvar.get()!='':
             self.master.variable.set(self.stringvar.get())
@@ -69,21 +67,16 @@ class LoadDirectoryPanel(tk.Frame):
         self.openbutton.grid(column=2,row=0)
         self.browsebutton.grid(column=3,row=0)
 
-
     def get_directory(self):
         self.directory.set(tkFileDialog.askdirectory())
         self.set_directory()
-
 
     def set_directory(self):
         os.chdir(self.directory.get())
 
         if not self.frommaster:
-
             self.master.destroy()
-
         else:
-
             self.master.directory.set(self.directory.get())
 
 
@@ -92,39 +85,62 @@ class TreeFrame(tk.Frame):
 
     def __init__(self, master=None, columns=[''], data=[''], title='Tree View'):
         tk.Frame.__init__(self, master)
+
         if master==None:
             self.frommaster=False
             self.master.title(title)
             self.pack(fill=tk.BOTH,expand=tk.Y)
         else:
             self.frommaster=True
+
         self.SelectableChildren = True
+        self.origselection = ''
         self.descending=True
         self.columns=columns
         self.data=data
         self.treecolumns=[]
         self.create()
+
         if self.columns!=['']:
             self.populate()
 
 
     def on_click(self, event):
-        #tree = event.widget
         item = self.tree.identify_row(event.y)
-        if self.tree.parent(item) and not self.SelectableChildren:
-            pass
-        else:
-            self.tree.selection_set(item)
-
+        if item:
+            self.origselection=item
+            if self.tree.parent(item) and not self.SelectableChildren:
+                pass
+            else:
+                self.tree.selection_set(item)
 
     def on_click_ctrl(self,event):
-        #tree = event.widget
         item = self.tree.identify_row(event.y)
-        if self.tree.parent(item) and not self.SelectableChildren:
-            pass
-        else:
-            self.tree.selection_add(item)
+        if item:
+            if self.tree.parent(item) and not self.SelectableChildren:
+                pass
+            else:
+                self.tree.selection_add(item)
 
+    def on_click_shift(self,event):
+        item = self.tree.identify_row(event.y)
+        if item:
+            if not self.origselection:
+                self.origselection=item
+            self.tree.selection_set(self.origselection)
+            items = [it for it in self.tree.get_children()]
+            items+=[it for ite in self.tree.get_children() for it in self.tree.get_children(ite)]
+            items+=[it for ite in self.tree.get_children() for el in self.tree.get_children(ite) for it in self.tree.get_children(el)]
+            items = sorted(items)
+            if items.index(item) <= items.index(self.tree.selection()[0]):
+                items = items[items.index(item):items.index(self.tree.selection()[0])]
+            else:
+                items = items[items.index(self.tree.selection()[0]):items.index(item)+1]
+            for it in items:
+                if self.tree.parent(self.tree.parent(it)) and self.tree.item(self.tree.parent(it), option = 'open') == False:
+                    pass
+                else:
+                    self.tree.selection_add(it)
 
     def create(self):
         self.tree = ttk.Treeview(self, columns=self.columns, show = 'headings', selectmode='none')
@@ -145,7 +161,7 @@ class TreeFrame(tk.Frame):
         #handle what happens if objet is selected
         self.tree.bind('<Button-1>', self.on_click)
         self.tree.bind('<Control-1>', self.on_click_ctrl)
-
+        self.tree.bind('<Shift-1>', self.on_click_shift)
 
     def _getlist(self, elem):
         ch=[0]*len(elem)
@@ -154,13 +170,11 @@ class TreeFrame(tk.Frame):
                 ch[i]=len(elem[i])
         return ch
 
-
     def update(self):
         self.tree.destroy()
         self.treecolumns=[]
         self.create()
         self.populate()
-
 
     def populate(self):
         self.maxcolwidth=[0]*len(self.columns)
@@ -228,7 +242,6 @@ class TreeFrame(tk.Frame):
         # reverse sort direction for next sort operation
         self.descending = not descending
 
-
     def get_selection(self):
         self.selectionlist=[[[],[]]]
         for element in self.tree.selection():
@@ -261,6 +274,7 @@ class TreeFrame(tk.Frame):
             else:
                 self.selectionlist[zip(*self.selectionlist)[0].index(elementrecord)][1] += [el for el in elementdata if el not in self.selectionlist[zip(*self.selectionlist)[0].index(elementrecord)][1]]
         self.selectionlist=self.selectionlist[1:]
+        print self.selectionlist
         '''
         for element in self.tree.selection():
             if self.tree.parent(element):
@@ -277,6 +291,8 @@ class TreeFrame(tk.Frame):
                 self.selectionlist=self.selectionlist+[os.path.join(self.tree.item(element)['values'][self.columns.index('label')],self.tree.item(el)['values'][self.columns.index('output_data')]) for el in  self.tree.get_children(element)]
         print self.selectionlist
         '''
+
+
 class CheckBoxPanel(tk.Frame):
 
     def __init__(self, master=None, title='CheckBox Panel', checkboxnames=[], selectedboxes=[]):
