@@ -551,5 +551,4 @@ class SumatraTree(tk.Frame):
     def finish(self):
         self.treepanel.get_selection()
         self.before_finish()
-        #self.load_selection()
-        #self.master.destroy()
+        self.master.destroy()
