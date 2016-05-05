@@ -534,6 +534,7 @@ class SumatraGui(tk.Frame):
         self.treepanel.update()
 
     def before_finish(self):
+        # Here something that happens then the user presses ok should be implemented. Thoughts are that in the future records can be erase from the gui and stuff like that. Major changes like erasing records shouldbe done only temporariliy in the gui. After pressing ok, the major changes should be listed again and the user should be asked to confirm them again.
         pass
 
     def finish(self):
