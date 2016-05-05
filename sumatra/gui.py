@@ -7,6 +7,9 @@ import os, sys, inspect, string, copy, re
 import numpy as np
 
 
+__version__ = "0.0.1"
+
+
 class PopupWindow(object):
 
     def __init__(self, master=None, title='PopPop'):
@@ -332,7 +335,7 @@ class CheckBoxPanel(tk.Frame):
 
 
 
-class SumatraTree(tk.Frame):
+class SumatraGui(tk.Frame):
 
 
     ShowFileEndings = 'all'
@@ -394,31 +397,16 @@ class SumatraTree(tk.Frame):
 
 
     def load_project(self, varname, elementname, mode):
-        #try:
-        self.project=load_project()
-        self.projectrecordstore=str(self.project.data_store)[str(self.project.data_store).find('to')+3:-1]
-        self.projectstatustext.set('Project "'+str(self.project.name)+'" loaded')
-
-        #prevents the projectoptionsinset to be created several times
         try:
-            self.projectoptionsinset
+            self.project=load_project()
+            self.projectrecordstore=str(self.project.data_store)[str(self.project.data_store).find('to')+3:-1]
+            self.projectstatustext.set('Project "'+str(self.project.name)+'" loaded')
+            if self.get_project():
+                self.process_data()
+            else:
+                self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
         except:
-            self.projectoptionsinset=tk.Frame(self.projectoptionspanel, bd=1, relief=tk.SOLID)
-            self.projectoptionsinset.pack(side=tk.RIGHT,expand=True,fill=tk.X)
-
-            tk.Label(self.projectoptionsinset, text='Project Options').pack(anchor='w')
-            self.projectoptionscheckboxpanel=CheckBoxPanel(self.projectoptionsinset)
-            self.projectoptionscheckboxpanel.checkboxnames=['Expand Parameters']
-            self.projectoptionscheckboxpanel.update()
-            self.projectoptionscheckboxpanel.pack()
-
-
-        if self.get_project():
-            self.process_data()
-        else:
-            self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
-        #except:
-        #    self.projectstatustext.set('Unable to find Sumatra project inside given directory!')
+            self.projectstatustext.set('Unable to find Sumatra project inside given directory!')
 
 
     def get_project(self):
