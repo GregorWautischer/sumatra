@@ -401,15 +401,16 @@ class SumatraGui(tk.Frame):
             self.project=load_project()
             self.projectrecordstore=str(self.project.data_store)[str(self.project.data_store).find('to')+3:-1]
             self.projectstatustext.set('Project "'+str(self.project.name)+'" loaded')
-            if self.get_project():
+        except:
+            self.project=''
+            self.projectstatustext.set('Unable to find Sumatra project inside given directory!')
+        if self.project:
+            if self.get_project_data():
                 self.process_data()
             else:
                 self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
-        except:
-            self.projectstatustext.set('Unable to find Sumatra project inside given directory!')
 
-
-    def get_project(self):
+    def get_project_data(self):
         self.records=self.project.record_store.list(self.project.name)
         if not self.records:
             return 0
