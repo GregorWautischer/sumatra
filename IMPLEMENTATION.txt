@@ -9,3 +9,8 @@ project.remove_evaluation_data(recordlabel, sumatra.datastore.base.DataKey, dele
 
 add_evaluation_data adds a file to a record (identified by its label) and moves the file to the record's data store if outside of it.
 remove_evaluation_data removes a file from a record and deletes it if delete=True (False by default). 
+
+A moving_filesystem_data_store that moves files found in datastore to a given location has been implemented. The data store is is implemented in the same way as the archiving_filesystem_data_store is but does not zip the data. Instead is creates a folder named after the records label (in the same way the archivinfs does) and store the data inside there.
+
+A moving_filesystem_data_store can be setup via "smt init (/configure) --move (/-MO) /target/path/
+
