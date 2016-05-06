@@ -382,6 +382,13 @@ class SumatraGui(tk.Frame):
         self.ButtonFrame.pack(anchor='e')
 
 
+        self.projectoptionsinset=tk.Frame(self.projectoptionspanel, bd=1, relief=tk.SOLID)
+        tk.Label(self.projectoptionsinset, text='Project Options').pack(anchor='w')
+        self.projectoptionscheckboxpanel=CheckBoxPanel(self.projectoptionsinset)
+        self.projectoptionscheckboxpanel.checkboxnames=['Expand Parameters']
+        self.projectoptionscheckboxpanel.update()
+        self.projectoptionscheckboxpanel.pack()
+
     def load_project(self, varname, elementname, mode):
         try:
             self.project=load_project()
@@ -399,8 +406,10 @@ class SumatraGui(tk.Frame):
             self.treepanel.data=['']
             self.treepanel.recreate()
             self.checkboxpanel.pack_forget()
+            self.projectoptionsinset.pack_forget()
         if self.project:
             if self.get_project_data() != 0:
+                self.projectoptionsinset.pack(side=tk.RIGHT,expand=True,fill=tk.X)
                 self.process_data()
                 self.checkboxpanel.checkboxnames=self.showdataheader
                 self.checkboxpanel.selectedboxes=list(self.standardcolumns)
@@ -419,6 +428,7 @@ class SumatraGui(tk.Frame):
                 self.treepanel.data=['']
                 self.treepanel.recreate()
                 self.checkboxpanel.pack_forget()
+                self.projectoptionsinset.pack_forget()
 
     def get_project_data(self):
         try:
