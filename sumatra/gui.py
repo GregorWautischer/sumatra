@@ -107,7 +107,6 @@ class TreeFrame(tk.Frame):
         if self.columns!=['']:
             self.populate()
 
-
     def on_click(self, event):
         item = self.tree.identify_row(event.y)
         if item:
@@ -371,21 +370,20 @@ class SumatraGui(tk.Frame):
         self.mydirectoryloadpanel=LoadDirectoryPanel(self, labeltext="Project Directory: ")
         self.mydirectoryloadpanel.pack(anchor='nw')
 
-        self.projectoptionspanel=tk.Frame(self)
-        self.projectoptionspanel.pack(fill=tk.X)
-
-        self.projectstatuslabelframe=tk.Frame(self.projectoptionspanel)
-        self.projectstatuslabelframe.pack(side=tk.LEFT,expand=True,fill=tk.X)
+        self.projectstatuslabelframe=tk.Frame(self)
+        self.projectstatuslabelframe.pack(fill=tk.X)
 
         self.projectstatuslabel=tk.Label(self.projectstatuslabelframe, textvariable=self.projectstatustext)
         self.projectstatuslabel.pack(side=tk.LEFT,expand=True,fill=tk.X)
 
 
-        self.checkboxpanel=CheckBoxPanel(self)
-        self.checkboxpanel.pack(side=tk.LEFT)
+        self.mainframe=tk.Frame(self)
+        self.mainframe.pack(fill=tk.BOTH, expand=tk.Y)
 
-        self.treepanel=TreeFrame(self)
-        self.treepanel.pack(fill=tk.BOTH, expand=tk.Y)
+        self.checkboxpanel=CheckBoxPanel(self.mainframe)
+
+        self.treepanel=TreeFrame(self.mainframe)
+        self.treepanel.pack(fill=tk.BOTH, side=tk.RIGHT, expand=tk.Y)
         self.treepanel.SelectableChildren = self.SelectableChildren
 
         self.ButtonFrame=tk.Frame(self)
@@ -404,11 +402,17 @@ class SumatraGui(tk.Frame):
         except:
             self.project=''
             self.projectstatustext.set('Unable to find Sumatra project inside given directory!')
+            self.treepanel.tree.destroy()
+            self.treepanel.columns=['']
+            self.treepanel.create()
+            self.checkboxpanel.pack_forget()
         if self.project:
             if self.get_project_data():
                 self.process_data()
+                self.checkboxpanel.pack(side=tk.LEFT, anchor='n')
             else:
                 self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
+                self.checkboxpanel.pack_forget()
 
     def get_project_data(self):
         self.records=self.project.record_store.list(self.project.name)
