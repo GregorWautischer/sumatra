@@ -30,7 +30,7 @@ class ArchivedDataFile(DataItem):
     def __init__(self, path, store, creation=None):
         self.path = path
         archive_label = self.path.split(os.path.sep)[0]
-        self.tarfile_path = os.path.join(store.archive_store, archive_label + ".tar.gz")
+        self.tarfile_path = os.path.expanduser(os.path.join(store.archive_store, archive_label + ".tar.gz"))
         info = self._get_info()
         self.size = info.size
         self.creation = creation or datetime.datetime.fromtimestamp(info.mtime).replace(microsecond=0)
@@ -91,8 +91,8 @@ class ArchivingFileSystemDataStore(FileSystemDataStore):
         """
         Archives files and, by default, deletes the originals.
         """
-        if not os.path.exists(self.archive_store):
-            os.mkdir(self.archive_store)
+        if not os.path.exists(os.path.expanduser(self.archive_store)):
+            os.mkdir(os.path.expanduser(self.archive_store))
         tf = tarfile.open(label + ".tar.gz",'w:gz')
         logging.info("Archiving data to file %s" % tf.name)
         # Add data files
@@ -103,7 +103,7 @@ class ArchivingFileSystemDataStore(FileSystemDataStore):
             archive_paths.append(archive_path)
         tf.close()
         # Move the archive to self.archive_store
-        shutil.copy(tf.name, self.archive_store) # shutil.move() doesn't work as expected if dataroot is a symbolic link
+        shutil.copy(tf.name, os.path.expanduser(self.archive_store)) # shutil.move() doesn't work as expected if dataroot is a symbolic link
         os.remove(tf.name)
         # Delete original files.
         if delete_originals:
