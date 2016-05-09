@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+"""
+Grafical user interface to the Sumatra computational experiment management tool.
+"""
+
+import sys
+from sumatra import __version__ as sumatraversion
+from sumatra.gui import SumatraGui, __version__
+
+message = """
+
+Welcome to the graphical user interface to the Sumatra computation experiment management tool!
+
+This is verion %s of the graphical user interface.
+You are running Sumatra version %s.
+
+  """ % (__version__, sumatraversion)
+
+print(message)
+
+SumatraGui().mainloop()
