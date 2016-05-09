@@ -327,10 +327,10 @@ class CheckBoxPanel(tk.Frame):
         for i in range(0,len(self.checkvariables)):
             if self.checkboxnames[i] in self.selectedboxes and self.checkvariables[i].get()==0:
                 self.selectedboxes.remove(self.checkboxnames[i])
-                self.master.changecolumn.set(self.checkboxnames[i])
+                self.master.master.changecolumn.set(self.checkboxnames[i])
             elif self.checkboxnames[i] not in self.selectedboxes and self.checkvariables[i].get()==1:
                 self.selectedboxes.append(self.checkboxnames[i])
-                self.master.changecolumn.set(self.checkboxnames[i])
+                self.master.master.changecolumn.set(self.checkboxnames[i])
 
 
 
