@@ -199,22 +199,20 @@ class TreeFrame(tk.Frame):
                 meas=[Font().measure(el) for el in changeditem]
                 self.maxcolwidth=[meas[i] if meas[i]>self.maxcolwidth[i] else self.maxcolwidth[i] for i in range(0,len(self.maxcolwidth))]
 
-
-                for i in range(0,max(itch)):
+                for m in range(0,len(itch)):
+                    if itch[m] != 0:
+                        for i in range(0,itch[m]):
                     #childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] for j in range(0,len(item))]
                     #childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] if not isinstance(item[j][i],list) else item[j][i][-1][:re.search('\d', item[j][i][-1]).start()] for j in range(0,len(item))]
                     #childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] if not isinstance(item[j][i],list) else item[j][i][-1][:item[j][i][-1].rfind('0')]+'...'+item[j][i][-1][item[j][i][-1].rfind('.'):] for j in range(0,len(item))]
-                    childitem=['' if itch[j] ==0 or itch[j]<i else item[j][i] if not isinstance(item[j][i],list) else re.sub(re.findall('\d+',item[j][i][0])[-1],'.',item[j][i][0]) for j in range(0,len(item))]
-                    child=self.tree.insert(parent,'end',values=childitem)
-                    meas=[Font().measure(el) for el in childitem]
+                            childitem=['' if j != m else item[j][i] if not isinstance(item[j][i],list) else re.sub(re.findall('\d+',item[j][i][0])[-1],'.',item[j][i][0]) for j in range(0,len(item))]
+                            child=self.tree.insert(parent,'end',values=childitem)
+                            meas=[Font().measure(el) for el in childitem]
 
-                    self.maxcolwidth=[meas[k] if meas[k]>self.maxcolwidth[k] else self.maxcolwidth[k] for k in range(0,len(self.maxcolwidth))]
-
-                    for j in range(0,len(item)):
-                        if itch[j]!=0 and itch[j]>i:
-                            if isinstance(item[j][i],list):
-                                for k in range(0,len(item[j][i])):
-                                    grandchilditem=['' if itch[l] ==0 or itch[l]<i else item[j][i][k] for l in range(0,len(item))]
+                            self.maxcolwidth=[meas[k] if meas[k]>self.maxcolwidth[k] else self.maxcolwidth[k] for k in range(0,len(self.maxcolwidth))]
+                            if isinstance(item[m][i],list):
+                                for j in range(0,len(item[m][i])):
+                                    grandchilditem=['' if l != m else item[l][i][j] for l in range(0,len(item))]
                                     self.tree.insert(child, 'end',values=grandchilditem)
 
 
@@ -250,13 +248,13 @@ class TreeFrame(tk.Frame):
             if self.tree.parent(element):
                 if self.tree.parent(self.tree.parent(element)):
                     elementrecord=self.tree.item(self.tree.parent(self.tree.parent(element)))['values'][self.columns.index('label')]
-                    elementdata=[self.tree.item(element)['values'][self.columns.index('output_data')]]
+                    elementdata=[self.tree.item(element)['values'][self.columns.index('output_data')] or self.tree.item(element)['values'][self.columns.index('evaluation_data')]]
                 else:
                     elementrecord=self.tree.item(self.tree.parent(element))['values'][self.columns.index('label')]
                     if self.tree.get_children(element):
-                        elementdata=[[self.tree.item(el)['values'][self.columns.index('output_data')] for el in self.tree.get_children(element)]]
+                        elementdata=[[self.tree.item(el)['values'][self.columns.index('output_data')]or self.tree.item(el)['values'][self.columns.index('evaluation_data')] for el in self.tree.get_children(element)]]
                     else:
-                        elementdata=[self.tree.item(element)['values'][self.columns.index('output_data')]]
+                        elementdata=[self.tree.item(element)['values'][self.columns.index('output_data')] or self.tree.item(element)['values'][self.columns.index('evaluation_data')]]
                         #if not self.tree.get_children(element):
                     #    elementdata=[self.tree.item(element)['values'][self.columns.index('output_data')]]
                     #else:
@@ -267,9 +265,9 @@ class TreeFrame(tk.Frame):
                 elementdata=[]
                 for el in self.tree.get_children(element):
                     if self.tree.get_children(el):
-                        elementdata+=[[self.tree.item(ele)['values'][self.columns.index('output_data')] for ele in self.tree.get_children(el)]]
+                        elementdata+=[[self.tree.item(ele)['values'][self.columns.index('output_data')] or self.tree.item(ele)['values'][self.columns.index('evaluation_data') ]for ele in self.tree.get_children(el)]]
                     else:
-                        elementdata+=[self.tree.item(el)['values'][self.columns.index('output_data')]]
+                        elementdata+=[self.tree.item(el)['values'][self.columns.index('output_data')] or self.tree.item(el)['values'][self.columns.index('evaluation_data')]]
                 #elementdata=[self.tree.item(el)['values'][self.columns.index('output_data')] for el in self.tree.get_children(element)]
             if not elementrecord in zip(*self.selectionlist)[0]:
                 self.selectionlist.append([elementrecord,elementdata])
@@ -354,7 +352,7 @@ class SumatraGui(tk.Frame):
         self.projectstatustext=tk.StringVar()
         self.projectstatustext.set("No project loaded!")
 
-        self.standardcolumns=['label','timestamp','tags','reason','parameters','output_data']
+        self.standardcolumns=['label','timestamp','tags','reason','parameters','output_data', 'evaluation_data']
 
         self.changecolumn=tk.StringVar()
 
