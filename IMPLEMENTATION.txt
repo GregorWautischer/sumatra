@@ -13,3 +13,5 @@ project.remove_evaluation_data(recordlabel, sumatra.datastore.base.DataKey, dele
 
 add_evaluation_data adds a file to a record (identified by its label) and moves the file to the record's data store if outside of it.
 remove_evaluation_data removes a file from a record and deletes it if delete=True (False by default). 
+
+The possibility for the archivin filesystem data_store to take relative filepaths was implemented (in sumatra/datastore/archivingfs.py).
