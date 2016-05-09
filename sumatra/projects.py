@@ -340,6 +340,43 @@ class Project(object):
         record.tags.remove(tag)
         self.record_store.save(self.name, record)
 
+    def add_evaluation_data(self, label, filepath):
+        if not os.path.isfile(filepath):
+            raise KeyError("File %s does not exist." % filepath)
+        filepath=os.path.abspath(os.path.expanduser(filepath))
+        filename=os.path.split(filepath)[1]
+        record = self.record_store.get(self.name, label)
+        if filename in [os.path.split(data.path)[1] for data in record.evaluation_data]:
+            raise Exception("File %s already present in record's evaluation_data" % filename)
+        if hasattr(record.datastore, 'archive_store'):
+            raise NotImplementedError("Adding files to archives not supported.")
+        elif hasattr(record.datastore, 'move_store'):
+            rootpath=os.path.expanduser(record.datastore.move_store)
+            copypath=os.path.join(os.path.expanduser(record.datastore.move_store),label)
+        else:
+            rootpath=record.datastore.root
+            copypath=record.datastore.root
+        if not copypath in filepath:
+            shutil.move(filepath, copypath)
+            filepath=os.path.join(copypath,filename)
+        filepath=os.path.relpath(filepath,rootpath)
+        record.evaluation_data.append(record.datastore.data_item_class(filepath, record.datastore).generate_key())
+        self.record_store.save(self.name, record)
+
+    def remove_evaluation_data(self, label, DataFile, delete=False):
+        record = self.record_store.get(self.name, label)
+        if DataFile in record.evaluation_data:
+            record.evaluation_data.remove(DataFile)
+        else:
+            raise KeyError("DataFile %s does not exist in record's evaluation_data." % DataFile)
+
+        if delete:
+            record.datastore.delete(DataFile)
+	db_record = self.record_store._manager.get(project__id=self.name, label=label)
+	for key in db_record.evaluation_data.all():
+		if key.to_sumatra()==DataFile:
+			key.delete()
+
     def compare(self, label1, label2, ignore_mimetypes=[], ignore_filenames=[]):
         record1 = self.record_store.get(self.name, label1)
         record2 = self.record_store.get(self.name, label2)

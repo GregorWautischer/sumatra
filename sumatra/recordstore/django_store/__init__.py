@@ -245,6 +245,11 @@ class DjangoRecordStore(RecordStore):
             for key in db_keys:
                 key.output_from_record = db_record
                 key.save()
+        for i in range(0, len(record.evaluation_data), chunk_size):
+            db_keys = (self._get_db_obj('DataKey', key) for key in record.evaluation_data[i:i + chunk_size])
+            for key in db_keys:
+                key.evaluation_of_record = db_record
+                key.save()
         if record.dependencies:
             for dep in record.dependencies:
                 # print "Adding dependency %s to db_record" % dep
@@ -319,7 +324,7 @@ class DjangoRecordStore(RecordStore):
         if not db_config.configured:
             db_config.configure()
         #management.call_command('sqlclear', 'django_store', database=self._db_label)  # this produces coloured output, need no_color option from Django 1.7
-        cmds = ["BEGIN;"] + ['DROP TABLE "django_store_{0}";'.format(x)
+        cmds = ["BEGIN;"] + ['DROP TABLE "django_store_{0}"{1};'.format(x, " CASCADE" if not 'sqlite3' in db_config.engine else "")
                              for x in ("record", "record_input_data", "record_dependencies",
                                        "record_platforms", "platforminformation", "datakey", "datastore", "launchmode",
                                        "parameterset", "repository", "dependency", "executable", "project")] + ["COMMIT;"]

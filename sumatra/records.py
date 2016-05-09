@@ -23,6 +23,7 @@ import time
 import os
 from os.path import join, basename, exists
 import re
+import shutil
 from operator import or_
 from functools import reduce
 from .formatting import get_formatter
@@ -85,6 +86,7 @@ class Record(object):
         self.input_datastore = input_datastore or self.datastore
         self.outcome = ''
         self.output_data = []
+        self.evaluation_data= []
         self.tags = set()
         self.diff = diff
         self.user = user
@@ -215,6 +217,8 @@ class Record(object):
         """
         self.datastore.delete(*self.output_data)
         self.output_data = []
+        self.datastore.delete(*self.evaluation_data)
+        self.evaluation_data = []
 
     @property
     def command_line(self):
@@ -328,7 +332,7 @@ class RecordDifference(object):
 
     def _list_datakeys(self, direction):
         keys = {self.recordA.label: {}, self.recordB.label: {}}
-        assert direction in ('input_data', 'output_data')
+        assert direction in ('input_data', 'output_data', 'evaluation_data')
         for rec in self.recordA, self.recordB:
             dataset = getattr(rec, direction)
             for key in dataset:

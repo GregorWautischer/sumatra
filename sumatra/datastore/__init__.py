@@ -30,6 +30,7 @@ from __future__ import unicode_literals
 from .base import DataStore, DataKey, IGNORE_DIGEST
 from .filesystem import FileSystemDataStore
 from .archivingfs import ArchivingFileSystemDataStore
+from .movingfs import MovingFileSystemDataStore
 from .mirroredfs import MirroredFileSystemDataStore
 try:
     from .davfs import DavFsDataStore
