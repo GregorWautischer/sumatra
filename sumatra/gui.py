@@ -410,6 +410,15 @@ class SumatraGui(tk.Frame):
             self.checkboxpanel.pack_forget()
         if self.project:
             if self.get_project_data() != 0:
+                self.checkboxpanel.checkboxnames=list(self.datalabels)
+                self.checkboxpanel.selectedboxes=list(self.standardcolumns)
+                for element in self.standardcolumns:
+                    self.checkboxpanel.checkboxnames.remove(element)
+                self.checkboxpanel.checkboxnames=list(self.standardcolumns+self.checkboxpanel.checkboxnames)
+                self.checkboxpanel.update()
+                self.showdatalist=[]
+                for element in self.standardcolumns:
+                    self.showdatalist.append(self.datalabels.index(element))
                 self.process_data()
                 self.treepanel.pack_forget()
                 self.checkboxpanel.pack(side=tk.LEFT, anchor='n')
@@ -427,47 +436,35 @@ class SumatraGui(tk.Frame):
         if not self.records:
             self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
             return 0
-        self.dataheader=self.records[0].__dict__.keys()
+        self.datalabels=self.records[0].__dict__.keys()
         self.removecolumns=['platforms','repository','datastore','input_datastore','dependencies','stdout_stderr']
 
-        self.datalist=[self.dataheader.index(element) for element in self.dataheader if element not in self.removecolumns]
+        self.datalist=[self.datalabels.index(element) for element in self.datalabels if element not in self.removecolumns]
 
         self.projectdata=[np.array(self.records[i].__dict__.values())[self.datalist] for i in range(0,len(self.records))]
 
-        self.dataheader=[element for element in self.dataheader if element not in self.removecolumns]
-        self.checkboxpanel.checkboxnames=list(self.dataheader)
-        self.checkboxpanel.selectedboxes=list(self.standardcolumns)
-        for element in self.standardcolumns:
-            self.checkboxpanel.checkboxnames.remove(element)
-
-        self.checkboxpanel.checkboxnames=list(self.standardcolumns+self.checkboxpanel.checkboxnames)
-        self.checkboxpanel.update()
-
-        self.showdatalist=[]
-
-        for element in self.standardcolumns:
-            self.showdatalist.append(self.dataheader.index(element))
+        self.datalabels=[element for element in self.datalabels if element not in self.removecolumns]
 
         return 1
 
     def update_tree(self, varname, elementname, mode):
         if self.changecolumn.get() in self.showdataheader:
-            self.showdatalist.remove(self.dataheader.index(self.changecolumn.get()))
+            self.showdatalist.remove(self.datalabels.index(self.changecolumn.get()))
         else:
             if self.changecolumn.get() in self.standardcolumns:#is it a standard element?
-                if self.dataheader[self.showdatalist[0]] in self.standardcolumns: #are there standard elements shown right now?
+                if self.datalabels[self.showdatalist[0]] in self.standardcolumns: #are there standard elements shown right now?
                     for i in range(0,len(self.standardcolumns)):
                         try:
-                            if self.standardcolumns.index(self.changecolumn.get()) < self.standardcolumns.index(self.dataheader[self.showdatalist[i]]):
-                                self.showdatalist.insert(i,self.dataheader.index(self.changecolumn.get()))
+                            if self.standardcolumns.index(self.changecolumn.get()) < self.standardcolumns.index(self.datalabels[self.showdatalist[i]]):
+                                self.showdatalist.insert(i,self.datalabels.index(self.changecolumn.get()))
                                 break
                         except:
-                            self.showdatalist.insert(i,self.dataheader.index(self.changecolumn.get()))
+                            self.showdatalist.insert(i,self.datalabels.index(self.changecolumn.get()))
                             break
                 else:
-                    self.showdatalist.insert(0,self.dataheader.index(self.changecolumn.get()))
+                    self.showdatalist.insert(0,self.datalabels.index(self.changecolumn.get()))
             else:
-                self.showdatalist.append(self.dataheader.index(self.changecolumn.get()))
+                self.showdatalist.append(self.datalabels.index(self.changecolumn.get()))
 
         self.process_data()
         self.treepanel.update()
@@ -475,7 +472,7 @@ class SumatraGui(tk.Frame):
 
     def process_data(self):
         self.showdata=list(copy.deepcopy([self.projectdata[i][self.showdatalist] for i in range(0,len(self.projectdata))]))
-        self.showdataheader=list(np.array(self.dataheader)[self.showdatalist])
+        self.showdataheader=list(np.array(self.datalabels)[self.showdatalist])
 
         if 'tags' in self.showdataheader:
 
