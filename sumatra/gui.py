@@ -408,7 +408,9 @@ class SumatraGui(tk.Frame):
         if self.project:
             if self.get_project_data() != 0:
                 self.process_data()
+                self.treepanel.pack_forget()
                 self.checkboxpanel.pack(side=tk.LEFT, anchor='n')
+                self.treepanel.pack(fill=tk.BOTH, side=tk.RIGHT, expand=tk.Y)
             else:
                 self.checkboxpanel.pack_forget()
 
