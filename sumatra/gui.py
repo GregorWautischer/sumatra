@@ -5,7 +5,7 @@ from tkinter.font import Font
 import tkFileDialog
 import os, sys, inspect, string, copy, re
 import numpy as np
-
+import traceback
 
 __version__ = "0.0.1"
 
@@ -40,6 +40,7 @@ class InputWindow(tk.Frame):
         if self.stringvar.get()!='':
             self.master.variable.set(self.stringvar.get())
             self.window.destroy()
+
 
 class LoadDirectoryPanel(tk.Frame):
     #Panel featuring a text field to enter a path, a browse button and an open button. The path of the chosen directory is shown in the text field.
@@ -313,7 +314,6 @@ class CheckBoxPanel(tk.Frame):
 
         self.update()
 
-
     def update(self):
         for i in range(0,len(self.checkboxnames)):
             self.checkvariables.append(tk.IntVar())
@@ -321,7 +321,6 @@ class CheckBoxPanel(tk.Frame):
             if self.checkboxnames[i] in self.selectedboxes:
                 self.checkboxes[i].select()
             self.checkboxes[i].pack(anchor='nw')
-
 
     def returning(self):
         for i in range(0,len(self.checkvariables)):
@@ -331,7 +330,6 @@ class CheckBoxPanel(tk.Frame):
             elif self.checkboxnames[i] not in self.selectedboxes and self.checkvariables[i].get()==1:
                 self.selectedboxes.append(self.checkboxnames[i])
                 self.master.master.changecolumn.set(self.checkboxnames[i])
-
 
 
 class SumatraGui(tk.Frame):
@@ -400,6 +398,7 @@ class SumatraGui(tk.Frame):
             self.projectrecordstore=str(self.project.data_store)[str(self.project.data_store).find('to')+3:-1]
             self.projectstatustext.set('Project "'+str(self.project.name)+'" loaded')
         except:
+            traceback.print_exc()
             self.project=''
             self.projectstatustext.set('Unable to find Sumatra project inside given directory!')
             self.treepanel.tree.destroy()
