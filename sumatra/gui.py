@@ -395,7 +395,10 @@ class SumatraGui(tk.Frame):
     def load_project(self, varname, elementname, mode):
         try:
             self.project=load_project()
-            self.projectrecordstore=str(self.project.data_store)[str(self.project.data_store).find('to')+3:-1]
+            if hasattr(self.project.data_store, 'move_store'):
+                self.projectdatastore=os.path.expanduser(str(self.project.data_store)[str(self.project.data_store).find('to')+3:-1])
+            else:
+                self.projectrecordstore=os.path.expanduser(self.project.data_store)
             self.projectstatustext.set('Project "'+str(self.project.name)+'" loaded')
         except:
             traceback.print_exc()
