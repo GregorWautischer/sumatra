@@ -406,18 +406,22 @@ class SumatraGui(tk.Frame):
             self.treepanel.create()
             self.checkboxpanel.pack_forget()
         if self.project:
-            if self.get_project_data():
+            if self.get_project_data() != 0:
                 self.process_data()
                 self.checkboxpanel.pack(side=tk.LEFT, anchor='n')
             else:
-                self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
                 self.checkboxpanel.pack_forget()
 
     def get_project_data(self):
-        self.records=self.project.record_store.list(self.project.name)
-        if not self.records:
+        try:
+            self.records=self.project.record_store.list(self.project.name)
+        except:
+            traceback.print_exc()
+            self.projectstatustext.set('Unable to load records for Sumatra project '+str(self.project.name)+'!')
             return 0
-
+        if not self.records:
+            self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
+            return 0
         self.dataheader=self.records[0].__dict__.keys()
         self.removecolumns=['platforms','repository','datastore','input_datastore','dependencies','stdout_stderr']
 
