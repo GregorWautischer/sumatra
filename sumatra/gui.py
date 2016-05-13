@@ -101,6 +101,7 @@ class TreeFrame(tk.Frame):
         self.origselection = ''
         self.descending=True
         self.columns=columns
+        self.displaycolumns=self.columns
         self.data=data
         self.treecolumns=[]
         self.create()
@@ -146,7 +147,7 @@ class TreeFrame(tk.Frame):
                     self.tree.selection_add(it)
 
     def create(self):
-        self.tree = ttk.Treeview(self, columns=self.columns, show = 'headings', selectmode='none')
+        self.tree = ttk.Treeview(self, columns=self.columns, displaycolumns=self.displaycolumns, show = 'headings', selectmode='none')
         ysb = tk.Scrollbar(orient=tk.VERTICAL, command=self.tree.yview)
         xsb = tk.Scrollbar(orient=tk.HORIZONTAL, command=self.tree.xview)
         self.tree['yscroll'] = ysb.set
@@ -173,11 +174,20 @@ class TreeFrame(tk.Frame):
                 ch[i]=len(elem[i])
         return ch
 
-    def update(self):
+    def recreate(self):
         self.tree.destroy()
         self.treecolumns=[]
         self.create()
-        self.populate()
+        if self.columns!=['']:
+            self.populate()
+
+    def update(self, newdisplaycolumns):
+        if not set(newdisplaycolumns)<=set(self.columns):
+            print 'Unable to updata Tree!'
+            return
+        else:
+            self.displaycolumns=newdisplaycolumns
+            self.tree.configure(displaycolumns=self.displaycolumns)
 
     def populate(self):
         self.maxcolwidth=[0]*len(self.columns)
@@ -188,7 +198,6 @@ class TreeFrame(tk.Frame):
             self.maxcolwidth[self.columns.index(column)]=Font().measure(column.title())
 
         for item in self.data:
-
             itch=self._getlist(item)
 
             if not all(el ==0 for el in itch):
@@ -196,8 +205,7 @@ class TreeFrame(tk.Frame):
                 changeditem=['' if itch[i] != 0 else item[i] for i in range(0,len(item))]
 
                 parent=self.tree.insert('','end',values=changeditem)
-
-                meas=[Font().measure(el) for el in changeditem]
+                meas=[Font().measure(str(el)) for el in changeditem]
                 self.maxcolwidth=[meas[i] if meas[i]>self.maxcolwidth[i] else self.maxcolwidth[i] for i in range(0,len(self.maxcolwidth))]
 
 
@@ -277,24 +285,6 @@ class TreeFrame(tk.Frame):
             else:
                 self.selectionlist[zip(*self.selectionlist)[0].index(elementrecord)][1] += [el for el in elementdata if el not in self.selectionlist[zip(*self.selectionlist)[0].index(elementrecord)][1]]
         self.selectionlist=self.selectionlist[1:]
-        print self.selectionlist
-        '''
-        for element in self.tree.selection():
-            if self.tree.parent(element):
-                if self.tree.parent(self.tree.parent(element)):
-                    print 'here'
-                    self.selectionlist.append(os.path.join(self.tree.item(self.tree.parent(self.tree.parent(element)))['values'][self.columns.index('label')],self.tree.item(element)['values'][self.columns.index('output_data')]))
-                elif self.tree.get_children(element):
-                    self.selectionlist.append([os.path.join(self.tree.item(self.tree.parent(element))['values'][self.columns.index('label')],self.tree.item(el)['values'][self.columns.index('output_data')]) for el in self.tree.get_children(element)])
-                    #self.selectionlist.append(os.path.join(self.tree.item(self.tree.parent(element))['values'][self.columns.index('label')],self.tree.item(element)['values'][self.columns.index('output_data')]))
-
-                else:
-                    self.selectionlist.append(os.path.join(self.tree.item(self.tree.parent(element))['values'][self.columns.index('label')],self.tree.item(element)['values'][self.columns.index('output_data')]))
-            else:
-                self.selectionlist=self.selectionlist+[os.path.join(self.tree.item(element)['values'][self.columns.index('label')],self.tree.item(el)['values'][self.columns.index('output_data')]) for el in  self.tree.get_children(element)]
-        print self.selectionlist
-        '''
-
 
 class CheckBoxPanel(tk.Frame):
 
@@ -404,26 +394,30 @@ class SumatraGui(tk.Frame):
             traceback.print_exc()
             self.project=''
             self.projectstatustext.set('Unable to find Sumatra project inside given directory!')
-            self.treepanel.tree.destroy()
             self.treepanel.columns=['']
-            self.treepanel.create()
+            self.treepanel.displaycolumns=['']
+            self.treepanel.data=['']
+            self.treepanel.recreate()
             self.checkboxpanel.pack_forget()
         if self.project:
             if self.get_project_data() != 0:
-                self.checkboxpanel.checkboxnames=list(self.datalabels)
-                self.checkboxpanel.selectedboxes=list(self.standardcolumns)
-                for element in self.standardcolumns:
-                    self.checkboxpanel.checkboxnames.remove(element)
-                self.checkboxpanel.checkboxnames=list(self.standardcolumns+self.checkboxpanel.checkboxnames)
-                self.checkboxpanel.update()
-                self.showdatalist=[]
-                for element in self.standardcolumns:
-                    self.showdatalist.append(self.datalabels.index(element))
                 self.process_data()
+                self.checkboxpanel.checkboxnames=self.showdataheader
+                self.checkboxpanel.selectedboxes=list(self.standardcolumns)
+                self.checkboxpanel.update()
+                self.visibledata=copy.deepcopy(self.standardcolumns)
+                self.treepanel.columns=self.showdataheader
+                self.treepanel.displaycolumns=self.visibledata
+                self.treepanel.data=list(zip(*self.showdata))
                 self.treepanel.pack_forget()
+                self.treepanel.recreate()
                 self.checkboxpanel.pack(side=tk.LEFT, anchor='n')
                 self.treepanel.pack(fill=tk.BOTH, side=tk.RIGHT, expand=tk.Y)
             else:
+                self.treepanel.columns=['']
+                self.treepanel.displaycolumns=['']
+                self.treepanel.data=['']
+                self.treepanel.recreate()
                 self.checkboxpanel.pack_forget()
 
     def get_project_data(self):
@@ -440,40 +434,36 @@ class SumatraGui(tk.Frame):
         self.removecolumns=['platforms','repository','datastore','input_datastore','dependencies','stdout_stderr']
 
         self.datalist=[self.datalabels.index(element) for element in self.datalabels if element not in self.removecolumns]
-
         self.projectdata=[np.array(self.records[i].__dict__.values())[self.datalist] for i in range(0,len(self.records))]
-
         self.datalabels=[element for element in self.datalabels if element not in self.removecolumns]
-
         return 1
 
     def update_tree(self, varname, elementname, mode):
-        if self.changecolumn.get() in self.showdataheader:
-            self.showdatalist.remove(self.datalabels.index(self.changecolumn.get()))
+        if self.changecolumn.get() in self.visibledata:
+            self.visibledata.remove(self.changecolumn.get())
         else:
             if self.changecolumn.get() in self.standardcolumns:#is it a standard element?
-                if self.datalabels[self.showdatalist[0]] in self.standardcolumns: #are there standard elements shown right now?
-                    for i in range(0,len(self.standardcolumns)):
-                        try:
-                            if self.standardcolumns.index(self.changecolumn.get()) < self.standardcolumns.index(self.datalabels[self.showdatalist[i]]):
-                                self.showdatalist.insert(i,self.datalabels.index(self.changecolumn.get()))
+                if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
+                    if self.standardcolumns.index(self.changecolumn.get()) < self.standardcolumns.index(self.visibledata[0]):
+                        self.visibledata.insert(0,self.changecolumn.get())
+                    else:
+                        for entry in self.visibledata:
+                            try:
+                                if self.standardcolumns.index(self.changecolumn.get()) < self.standardcolumns.index(entry):
+                                    selfvisibledata.insert(self.visibledata.index(entry),self.changecolumn.get())
+                                    break
+                            except:
+                                self.visibledata.insert(self.visibledata.index(entry),self.changecolumn.get())
                                 break
-                        except:
-                            self.showdatalist.insert(i,self.datalabels.index(self.changecolumn.get()))
-                            break
                 else:
-                    self.showdatalist.insert(0,self.datalabels.index(self.changecolumn.get()))
+                    self.visibledata.insert(0,self.changecolumn.get())
             else:
-                self.showdatalist.append(self.datalabels.index(self.changecolumn.get()))
-
-        self.process_data()
-        self.treepanel.update()
-
+                self.visibledata.append(self.changecolumn.get())
+        self.treepanel.update(self.visibledata)
 
     def process_data(self):
-        self.showdata=list(copy.deepcopy([self.projectdata[i][self.showdatalist] for i in range(0,len(self.projectdata))]))
-        self.showdataheader=list(np.array(self.datalabels)[self.showdatalist])
-
+        self.showdata=list(copy.deepcopy(self.projectdata))
+        self.showdataheader=copy.deepcopy(self.datalabels)
         if 'tags' in self.showdataheader:
 
             for element in self.showdata:
@@ -502,6 +492,12 @@ class SumatraGui(tk.Frame):
                         element[self.showdataheader.index('parameters')]=', '.join('{} = {}'.format(key,val) for key, val in sorted(paramdict.items()))
                     #element[self.showdataheader.index('parameters')]=element[self.showdataheader.index('parameters')].as_dict()
 
+        if 'input_data' in self.showdataheader:
+
+            for element in self.showdata:
+
+                if not element[self.showdataheader.index('input_data')]:
+                    element[self.showdataheader.index('input_data')]=''
 
         if 'output_data' in self.showdataheader:
 
@@ -538,10 +534,13 @@ class SumatraGui(tk.Frame):
                     allsubs=[item for sub in sets for item in sub]
                     element[self.showdataheader.index('output_data')]=sets+[el for el in element[self.showdataheader.index('output_data')] if el not in allsubs]
 
-        self.treepanel.columns=self.showdataheader
-        self.treepanel.data=self.showdata
+            self.showdata=list(zip(*self.showdata))
 
-        self.treepanel.update()
+            for i in range(0,len(self.standardcolumns)):
+                if self.showdataheader[i]!=self.standardcolumns[i]:
+                    swapindex=self.showdataheader.index(self.standardcolumns[i])
+                    self.showdataheader[swapindex], self.showdataheader[i] = self.showdataheader[i], self.showdataheader[swapindex]
+                    self.showdata[swapindex], self.showdata[i] = self.showdata[i], self.showdata[swapindex]
 
     def before_finish(self):
         # Here something that happens then the user presses ok should be implemented. Thoughts are that in the future records can be erase from the gui and stuff like that. Major changes like erasing records shouldbe done only temporariliy in the gui. After pressing ok, the major changes should be listed again and the user should be asked to confirm them again.
