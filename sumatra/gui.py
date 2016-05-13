@@ -358,8 +358,11 @@ class SumatraGui(tk.Frame):
         self.mydirectoryloadpanel=LoadDirectoryPanel(self, labeltext="Project Directory: ")
         self.mydirectoryloadpanel.pack(anchor='nw')
 
-        self.projectstatuslabelframe=tk.Frame(self)
-        self.projectstatuslabelframe.pack(fill=tk.X)
+        self.projectoptionspanel=tk.Frame(self)
+        self.projectoptionspanel.pack(fill=tk.X)
+
+        self.projectstatuslabelframe=tk.Frame(self.projectoptionspanel)
+        self.projectstatuslabelframe.pack(fill=tk.X, expand=True, side=tk.LEFT)
 
         self.projectstatuslabel=tk.Label(self.projectstatuslabelframe, textvariable=self.projectstatustext)
         self.projectstatuslabel.pack(side=tk.LEFT,expand=True,fill=tk.X)
@@ -389,6 +392,7 @@ class SumatraGui(tk.Frame):
         self.projectoptionscheckboxpanel.update()
         self.projectoptionscheckboxpanel.pack()
 
+
     def load_project(self, varname, elementname, mode):
         try:
             self.project=load_project()
@@ -409,7 +413,7 @@ class SumatraGui(tk.Frame):
             self.projectoptionsinset.pack_forget()
         if self.project:
             if self.get_project_data() != 0:
-                self.projectoptionsinset.pack(side=tk.RIGHT,expand=True,fill=tk.X)
+                self.projectoptionsinset.pack(side=tk.RIGHT, expand=True, fill=tk.X)
                 self.process_data()
                 self.checkboxpanel.checkboxnames=self.showdataheader
                 self.checkboxpanel.selectedboxes=list(self.standardcolumns)
