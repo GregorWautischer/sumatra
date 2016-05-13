@@ -288,7 +288,7 @@ class TreeFrame(tk.Frame):
 
 class CheckBoxPanel(tk.Frame):
 
-    def __init__(self, master=None, title='CheckBox Panel', checkboxnames=[], selectedboxes=[]):
+    def __init__(self, master=None, title='CheckBox Panel', checkboxnames=[], selectedboxes=[], mastervariable=None):
         tk.Frame.__init__(self,master)
         if master==None:
             self.frommaster=False
@@ -296,6 +296,7 @@ class CheckBoxPanel(tk.Frame):
             self.pack()
         else:
             self.frommaster=True
+        self.mastervariable=mastervariable
 
         self.checkboxnames=checkboxnames
         self.selectedboxes=selectedboxes
@@ -319,7 +320,8 @@ class CheckBoxPanel(tk.Frame):
                 self.master.master.changecolumn.set(self.checkboxnames[i])
             elif self.checkboxnames[i] not in self.selectedboxes and self.checkvariables[i].get()==1:
                 self.selectedboxes.append(self.checkboxnames[i])
-                self.master.master.changecolumn.set(self.checkboxnames[i])
+                if self.mastervariable:
+                    self.mastervariable.set(self.checkboxnames[i])
 
 
 class SumatraGui(tk.Frame):
@@ -371,7 +373,7 @@ class SumatraGui(tk.Frame):
         self.mainframe=tk.Frame(self)
         self.mainframe.pack(fill=tk.BOTH, expand=tk.Y)
 
-        self.checkboxpanel=CheckBoxPanel(self.mainframe)
+        self.checkboxpanel=CheckBoxPanel(self.mainframe, mastervariable=self.changecolumn)
 
         self.treepanel=TreeFrame(self.mainframe)
         self.treepanel.pack(fill=tk.BOTH, side=tk.RIGHT, expand=tk.Y)
