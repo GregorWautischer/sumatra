@@ -196,7 +196,6 @@ class TreeFrame(tk.Frame):
 
             self.treecolumns.append(self.tree.column(column, minwidth=Font().measure(column.title())))
             self.maxcolwidth[self.columns.index(column)]=Font().measure(column.title())
-
         for item in self.data:
             itch=self._getlist(item)
 
@@ -313,11 +312,24 @@ class CheckBoxPanel(tk.Frame):
                 self.checkboxes[i].select()
             self.checkboxes[i].pack(anchor='nw')
 
+    def disable(self, checkboxname):
+        for checkbox in self.checkboxes:
+            if checkbox['text']==checkboxname:
+                checkbox.config(state=tk.DISABLED)
+                break
+
+    def enable(self, checkboxname):
+        for checkbox in self.checkboxes:
+            if checkbox['text']==checkboxname:
+                checkbox.config(state=tk.NORMAL)
+                break
+
     def returning(self):
         for i in range(0,len(self.checkvariables)):
             if self.checkboxnames[i] in self.selectedboxes and self.checkvariables[i].get()==0:
                 self.selectedboxes.remove(self.checkboxnames[i])
-                self.master.master.changecolumn.set(self.checkboxnames[i])
+                if self.mastervariable:
+                    self.mastervariable.set(self.checkboxnames[i])
             elif self.checkboxnames[i] not in self.selectedboxes and self.checkvariables[i].get()==1:
                 self.selectedboxes.append(self.checkboxnames[i])
                 if self.mastervariable:
@@ -347,14 +359,16 @@ class SumatraGui(tk.Frame):
         self.standardcolumns=['label','timestamp','tags','reason','parameters','output_data']
 
         self.changecolumn=tk.StringVar()
-
+        self.optionsvar=tk.StringVar()
+        self.parametersvar=tk.StringVar()
         self.init_window()
 
         self.changecolumn.trace(mode='w', callback=self.update_tree)
+        self.parametersvar.trace(mode='w', callback=self.update_tree)
+        self.optionsvar.trace(mode='w', callback=self.options)
         self.directory.trace(mode='w',callback=self.load_project)
 
         self.directory.set(os.getcwd())
-
 
     def init_window(self):
         self.mydirectoryloadpanel=LoadDirectoryPanel(self, labeltext="Project Directory: ")
@@ -389,11 +403,48 @@ class SumatraGui(tk.Frame):
 
         self.projectoptionsinset=tk.Frame(self.projectoptionspanel, bd=1, relief=tk.SOLID)
         tk.Label(self.projectoptionsinset, text='Project Options').pack(anchor='w')
-        self.projectoptionscheckboxpanel=CheckBoxPanel(self.projectoptionsinset)
+        self.projectoptionscheckboxpanel=CheckBoxPanel(self.projectoptionsinset, mastervariable=self.optionsvar)
         self.projectoptionscheckboxpanel.checkboxnames=['Expand Parameters']
         self.projectoptionscheckboxpanel.update()
         self.projectoptionscheckboxpanel.pack()
 
+        #self.parametercheckboxframe=tk.Frame(self.projectoptionspanel)
+        #self.parametercheckboxframe.pack(side=tk.RIGHT)
+
+        self.parametercheckboxpanel=CheckBoxPanel(self.projectoptionspanel,mastervariable=self.parametersvar)
+        self.parametercheckboxpanelstatus=0
+
+    def options(self, varname, elementname, mode):
+        if self.optionsvar.get()=='Expand Parameters':
+            if self.parametercheckboxpanelstatus==0:
+                self.parametercheckboxpanel.pack(side=tk.RIGHT)
+                self.parametercheckboxpanelstatus=1
+                if 'parameters' in self.visibledata:
+                    self.visibledata.remove('parameters')
+                self.visibledata+=[element for element in self.parameters if element in self.parametercheckboxpanel.selectedboxes]
+                self.checkboxpanel.disable('parameters')
+                self.treepanel.update(self.visibledata)
+            else:
+                self.parametercheckboxpanel.pack_forget()
+                self.parametercheckboxpanelstatus=0
+                self.visibledata=[element for element in self.visibledata if element not in self.parameters]
+                if 'parameters' in self.checkboxpanel.selectedboxes:
+                    if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
+                        if self.standardcolumns.index('parameters') < self.standardcolumns.index(self.visibledata[0]):
+                            self.visibledata.insert(0,'parameters')
+                        else:
+                            for entry in self.visibledata:
+                                try:
+                                    if self.standardcolumns.index('parameters') < self.standardcolumns.index(entry):
+                                        selfvisibledata.insert(self.visibledata.index(entry),'parameters')
+                                        break
+                                except:
+                                    self.visibledata.insert(self.visibledata.index(entry),'parameters')
+                                    break
+                    else:
+                        self.visibledata.insert(0,'parameters')
+                self.treepanel.update(self.visibledata)
+                self.checkboxpanel.enable('parameters')
 
     def load_project(self, varname, elementname, mode):
         try:
@@ -417,7 +468,9 @@ class SumatraGui(tk.Frame):
             if self.get_project_data() != 0:
                 self.projectoptionsinset.pack(side=tk.RIGHT, expand=True, fill=tk.X)
                 self.process_data()
-                self.checkboxpanel.checkboxnames=self.showdataheader
+                self.parametercheckboxpanel.checkboxnames=self.parameters
+                self.parametercheckboxpanel.update()
+                self.checkboxpanel.checkboxnames=[item for item in self.showdataheader if item not in self.parameters]
                 self.checkboxpanel.selectedboxes=list(self.standardcolumns)
                 self.checkboxpanel.update()
                 self.visibledata=copy.deepcopy(self.standardcolumns)
@@ -455,26 +508,52 @@ class SumatraGui(tk.Frame):
         return 1
 
     def update_tree(self, varname, elementname, mode):
-        if self.changecolumn.get() in self.visibledata:
-            self.visibledata.remove(self.changecolumn.get())
+        column = self.master.globalgetvar(varname)
+        comparecolumn=''
+        if not self.visibledata:
+            self.visibledata.append(column)
         else:
-            if self.changecolumn.get() in self.standardcolumns:#is it a standard element?
-                if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
-                    if self.standardcolumns.index(self.changecolumn.get()) < self.standardcolumns.index(self.visibledata[0]):
-                        self.visibledata.insert(0,self.changecolumn.get())
+            if column in self.visibledata:
+                self.visibledata.remove(column)
+            else:
+                if column in self.parameters:
+                    if not set(self.parameters).isdisjoint(set(self.visibledata)):
+                        found=False
+                        for i in range(len(self.visibledata)):
+                            if self.visibledata[i] in self.parameters:
+                                if not found:
+                                    found=True
+                                if self.parameters.index(column) < self.parameters.index(self.visibledata[i]):
+                                    self.visibledata.insert(i,column)
+                                    break
+                            else:
+                                if found:
+                                    self.visibledata.insert(i,column)
+                                    break
                     else:
+                        comparecolumn='parameters'
+                else:
+                    comparecolumn=column
+            if comparecolumn:
+                if comparecolumn in self.standardcolumns:#is it a standard element?
+                    if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
+                        inserted=False
                         for entry in self.visibledata:
                             try:
-                                if self.standardcolumns.index(self.changecolumn.get()) < self.standardcolumns.index(entry):
-                                    selfvisibledata.insert(self.visibledata.index(entry),self.changecolumn.get())
+                                if self.standardcolumns.index(comparecolumn) < self.standardcolumns.index(entry):
+                                    selfvisibledata.insert(self.visibledata.index(entry),column)
+                                    inserted=True
                                     break
                             except:
-                                self.visibledata.insert(self.visibledata.index(entry),self.changecolumn.get())
+                                self.visibledata.insert(self.visibledata.index(entry),column)
+                                inserted=True
                                 break
+                        if not inserted:
+                            self.visibledata.append(column)
+                    else:
+                        self.visibledata.insert(0,column)
                 else:
-                    self.visibledata.insert(0,self.changecolumn.get())
-            else:
-                self.visibledata.append(self.changecolumn.get())
+                    self.visibledata.append(column)
         self.treepanel.update(self.visibledata)
 
     def process_data(self):
@@ -488,7 +567,7 @@ class SumatraGui(tk.Frame):
 
                 else:
                     element[self.showdataheader.index('tags')]=' '.join(element[self.showdataheader.index('tags')])
-
+        '''
         if 'parameters' in self.showdataheader:
 
             for element in self.showdata:
@@ -507,7 +586,7 @@ class SumatraGui(tk.Frame):
                             paramdict.update(element[self.showdataheader.index('parameters')].as_dict().values()[i])
                         element[self.showdataheader.index('parameters')]=', '.join('{} = {}'.format(key,val) for key, val in sorted(paramdict.items()))
                     #element[self.showdataheader.index('parameters')]=element[self.showdataheader.index('parameters')].as_dict()
-
+        '''
         if 'input_data' in self.showdataheader:
 
             for element in self.showdata:
@@ -550,13 +629,34 @@ class SumatraGui(tk.Frame):
                     allsubs=[item for sub in sets for item in sub]
                     element[self.showdataheader.index('output_data')]=sets+[el for el in element[self.showdataheader.index('output_data')] if el not in allsubs]
 
-            self.showdata=list(zip(*self.showdata))
+        self.showdata=list(zip(*self.showdata))
 
-            for i in range(0,len(self.standardcolumns)):
-                if self.showdataheader[i]!=self.standardcolumns[i]:
-                    swapindex=self.showdataheader.index(self.standardcolumns[i])
-                    self.showdataheader[swapindex], self.showdataheader[i] = self.showdataheader[i], self.showdataheader[swapindex]
-                    self.showdata[swapindex], self.showdata[i] = self.showdata[i], self.showdata[swapindex]
+        if 'parameters' in self.showdataheader:
+            index = self.showdataheader.index('parameters')
+            self.showdata[index]=list(self.showdata[index])
+            self.parameters=[]
+            for i in range(0,len(self.showdata[index])):
+                if not self.showdata[index][i]:
+                    self.showdata[index][i]=''
+                else:
+                    # Collect parameters
+                    self.parameters += get_keys(self.showdata[index][i].as_dict())
+            self.parameters = list(set(self.parameters))
+            self.showdataheader+=self.parameters
+            self.showdata+=[['' for i in range(len(self.showdata[0]))] for j in range(len(self.parameters))]
+            self.showdata[18][0]='ha'
+            for i in range(0,len(self.showdata[index])):
+                if self.showdata[index][i]:
+                    dic=flatten_dict(self.showdata[index][i].as_dict())
+                    params=dic.keys()
+                    for j in range(0,len(params)):
+                        self.showdata[self.showdataheader.index(params[j])][i]=str(dic[params[j]])
+                    self.showdata[index][i]=', '.join('{} = {}'.format(key,val) for key, val in sorted(dic.items()))
+        for i in range(0,len(self.standardcolumns)):
+            if self.showdataheader[i]!=self.standardcolumns[i]:
+                swapindex=self.showdataheader.index(self.standardcolumns[i])
+                self.showdataheader[swapindex], self.showdataheader[i] = self.showdataheader[i], self.showdataheader[swapindex]
+                self.showdata[swapindex], self.showdata[i] = self.showdata[i], self.showdata[swapindex]
 
     def before_finish(self):
         # Here something that happens then the user presses ok should be implemented. Thoughts are that in the future records can be erase from the gui and stuff like that. Major changes like erasing records shouldbe done only temporariliy in the gui. After pressing ok, the major changes should be listed again and the user should be asked to confirm them again.
@@ -566,3 +666,15 @@ class SumatraGui(tk.Frame):
         self.treepanel.get_selection()
         self.before_finish()
         self.master.destroy()
+
+def get_keys(dic):
+    return [val for sublist in [get_keys(el) for el in dic.values() if isinstance(el,dict)] for val in sublist] + [dic.keys()[i] for i in range(0, len(dic.values())) if not isinstance(dic.values()[i], dict)]
+
+def flatten_dict(dic):
+    new_dict={}
+    for key,value in dic.iteritems():
+        if isinstance(value,dict):
+            new_dict.update(flatten_dict(value))
+        else:
+            new_dict.update({key: value})
+    return new_dict
