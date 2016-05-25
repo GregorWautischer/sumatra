@@ -10,6 +10,10 @@ import traceback
 __version__ = "0.0.1"
 
 
+
+
+
+
 class PopupWindow(object):
 
     def __init__(self, master=None, title='PopPop'):
@@ -17,7 +21,7 @@ class PopupWindow(object):
         self.pop.title(title)
 
 
-class InputWindow(tk.Frame):
+class InputWindow(ttk.Frame):
 
     def __init__(self, master=None,title='', text=''):
         self.window = PopupWindow(master=master, title=title).pop
@@ -26,10 +30,10 @@ class InputWindow(tk.Frame):
         self.text = text
 
         self.stringvar= tk.StringVar()
-        self.label=tk.Label(self.window, text=self.text)
-        self.entry = tk.Entry(self.window, width=50, textvariable=self.stringvar)
-        self.okbutton=tk.Button(self.window,text='OK', command=self.set_variable)
-        self.exitbutton=tk.Button(self.window,text='Exit', command=self.window.destroy)
+        self.label=ttk.Label(self.window, text=self.text)
+        self.entry = ttk.Entry(self.window, width=50, textvariable=self.stringvar)
+        self.okbutton=ttk.Button(self.window,text='OK', command=self.set_variable)
+        self.exitbutton=ttk.Button(self.window,text='Exit', command=self.window.destroy)
 
         self.label.grid(column=0,row=0)
         self.entry.grid(column=1,row=0)
@@ -42,29 +46,28 @@ class InputWindow(tk.Frame):
             self.window.destroy()
 
 
-class LoadDirectoryPanel(tk.Frame):
+class LoadDirectoryPanel(ttk.Frame):
     #Panel featuring a text field to enter a path, a browse button and an open button. The path of the chosen directory is shown in the text field.
     #When pressing open python changes into the choosen directory if possible (os.chdir) and destroys itself when not called from a master frame or sets the string variable "directory" to the choosen directory else.
 
-    def __init__(self, master=None,labeltext='Directory: '):
-        tk.Frame.__init__(self,master)
-
+    def __init__(self, master=None, labeltext='Directory: ', mastervariable=None):
+        ttk.Frame.__init__(self,master)
         if master==None:
             self.frommaster=False
             self.master.title('Load Directory')
             self.pack()
         else:
             self.frommaster=True
-
+        self.mastervariable=mastervariable
         self.labeltext=labeltext
 
         self.directory=tk.StringVar()
         self.directory.set(os.getcwd())
 
-        self.label=tk.Label(self, text=self.labeltext)
-        self.entry = tk.Entry(self, width=50,textvariable=self.directory)
-        self.openbutton=tk.Button(self,text='Open', command=self.set_directory)
-        self.browsebutton=tk.Button(self,text='Browse', command=self.get_directory)
+        self.label=ttk.Label(self, text=self.labeltext)
+        self.entry = ttk.Entry(self, width=50,textvariable=self.directory)
+        self.openbutton=ttk.Button(self,text='Open', command=self.set_directory)
+        self.browsebutton=ttk.Button(self,text='Browse', command=self.get_directory)
 
         self.label.grid(column=0,row=0)
         self.entry.grid(column=1,row=0)
@@ -81,14 +84,13 @@ class LoadDirectoryPanel(tk.Frame):
         if not self.frommaster:
             self.master.destroy()
         else:
-            self.master.directory.set(self.directory.get())
+            self.mastervariable.set(self.directory.get())
 
 
-
-class TreeFrame(tk.Frame):
+class TreeFrame(ttk.Frame):
 
     def __init__(self, master=None, columns=[''], data=[''], title='Tree View'):
-        tk.Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master)
 
         if master==None:
             self.frommaster=False
@@ -148,8 +150,8 @@ class TreeFrame(tk.Frame):
 
     def create(self):
         self.tree = ttk.Treeview(self, columns=self.columns, displaycolumns=self.displaycolumns, show = 'headings', selectmode='none')
-        ysb = tk.Scrollbar(orient=tk.VERTICAL, command=self.tree.yview)
-        xsb = tk.Scrollbar(orient=tk.HORIZONTAL, command=self.tree.xview)
+        ysb = ttk.Scrollbar(orient=tk.VERTICAL, command=self.tree.yview)
+        xsb = ttk.Scrollbar(orient=tk.HORIZONTAL, command=self.tree.xview)
         self.tree['yscroll'] = ysb.set
         self.tree['xscroll'] = xsb.set
 
@@ -183,7 +185,7 @@ class TreeFrame(tk.Frame):
 
     def update(self, newdisplaycolumns):
         if not set(newdisplaycolumns)<=set(self.columns):
-            print 'Unable to updata Tree!'
+            print 'Unable to update Tree!'
             return
         else:
             self.displaycolumns=newdisplaycolumns
@@ -285,10 +287,11 @@ class TreeFrame(tk.Frame):
                 self.selectionlist[zip(*self.selectionlist)[0].index(elementrecord)][1] += [el for el in elementdata if el not in self.selectionlist[zip(*self.selectionlist)[0].index(elementrecord)][1]]
         self.selectionlist=self.selectionlist[1:]
 
-class CheckBoxPanel(tk.Frame):
+
+class CheckBoxPanel(ttk.Frame):
 
     def __init__(self, master=None, title='CheckBox Panel', checkboxnames=[], selectedboxes=[], mastervariable=None):
-        tk.Frame.__init__(self,master)
+        ttk.Frame.__init__(self,master)
         if master==None:
             self.frommaster=False
             self.master.title(title)
@@ -305,20 +308,38 @@ class CheckBoxPanel(tk.Frame):
         self.update()
 
     def update(self):
+        self.checkvariables=[]
+        for box in self.checkboxes:
+            box.destroy()
+        self.checkboxes=[]
         for i in range(0,len(self.checkboxnames)):
             self.checkvariables.append(tk.IntVar())
-            self.checkboxes.append(tk.Checkbutton(self,text=self.checkboxnames[i],command=self.returning, variable=self.checkvariables[i]))
+            self.checkboxes.append(ttk.Checkbutton(self,text=self.checkboxnames[i],command=self.returning, variable=self.checkvariables[i]))
             if self.checkboxnames[i] in self.selectedboxes:
-                self.checkboxes[i].select()
+                self.checkvariables[i].set(1)
             self.checkboxes[i].pack(anchor='nw')
 
+    def unselectall(self):
+        for i in range(0,len(self.checkboxnames)):
+            if self.checkvariables[i].get()==1:
+                self.checkboxes[i].invoke()
+
+    def clear(self):
+        self.unselectall()
+        self.checkboxnames=[]
+        self.checkboxvariables=[]
+        for box in self.checkboxes:
+            box.destroy()
+
     def disable(self, checkboxname):
+        #Disable a checkbox (not checkable anymore) and grey it
         for checkbox in self.checkboxes:
             if checkbox['text']==checkboxname:
                 checkbox.config(state=tk.DISABLED)
                 break
 
     def enable(self, checkboxname):
+        #Enable a checkbox to be checked
         for checkbox in self.checkboxes:
             if checkbox['text']==checkboxname:
                 checkbox.config(state=tk.NORMAL)
@@ -336,16 +357,17 @@ class CheckBoxPanel(tk.Frame):
                     self.mastervariable.set(self.checkboxnames[i])
 
 
-class SumatraGui(tk.Frame):
+class SumatraGui(ttk.Frame):
 
 
     ShowFileEndings = 'all'
     SelectableChildren = True
 
-    def __init__(self, title='Sumatra'):
-        tk.Frame.__init__(self)
-        self.master.title(title)
-        self.pack(fill=tk.BOTH, expand=tk.Y, anchor='nw')
+    def __init__(self, master):
+        ttk.Frame.__init__(self, master)
+
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(4, weight=1)
 
         self.treeset=0
         self.descending=True
@@ -371,80 +393,39 @@ class SumatraGui(tk.Frame):
         self.directory.set(os.getcwd())
 
     def init_window(self):
-        self.mydirectoryloadpanel=LoadDirectoryPanel(self, labeltext="Project Directory: ")
-        self.mydirectoryloadpanel.pack(anchor='nw')
+        self.projectpanel=ttk.Frame(self)
+        self.projectpanel.grid(row=0,column=0, sticky=(tk.N, tk.W, tk.S, tk.E))
 
-        self.projectoptionspanel=tk.Frame(self)
-        self.projectoptionspanel.pack(fill=tk.X)
+        self.directoryloadpanel=LoadDirectoryPanel(self.projectpanel, labeltext="Project Directory: ", mastervariable=self.directory)
+        self.directoryloadpanel.grid(row=0,column=0, sticky=(tk.N, tk.W))
 
-        self.projectstatuslabelframe=tk.Frame(self.projectoptionspanel)
-        self.projectstatuslabelframe.pack(fill=tk.X, expand=True, side=tk.LEFT)
+        self.projectstatuslabelframe=ttk.Frame(self.projectpanel)
+        self.projectstatuslabelframe.grid(row=1, column=0)
 
-        self.projectstatuslabel=tk.Label(self.projectstatuslabelframe, textvariable=self.projectstatustext)
-        self.projectstatuslabel.pack(side=tk.LEFT,expand=True,fill=tk.X)
+        self.projectstatuslabel=ttk.Label(self.projectstatuslabelframe, textvariable=self.projectstatustext, font='TkCaptionFont')
+        self.projectstatuslabel.grid(sticky=(tk.N, tk.S, tk.W, tk.E))
 
-
-        self.mainframe=tk.Frame(self)
-        self.mainframe.pack(fill=tk.BOTH, expand=tk.Y)
-
-        self.checkboxpanel=CheckBoxPanel(self.mainframe, mastervariable=self.changecolumn)
-
-        self.treepanel=TreeFrame(self.mainframe)
-        self.treepanel.pack(fill=tk.BOTH, side=tk.RIGHT, expand=tk.Y)
-        self.treepanel.SelectableChildren = self.SelectableChildren
-
-        self.ButtonFrame=tk.Frame(self)
-        self.okbutton=tk.Button(self.ButtonFrame,text='OK', command=self.finish)
-        self.okbutton.pack(side=tk.LEFT)
-        self.exitbutton=tk.Button(self.ButtonFrame,text='Exit', command=self.master.destroy)
-        self.exitbutton.pack(side=tk.LEFT)
-        self.ButtonFrame.pack(anchor='e')
-
-
-        self.projectoptionsinset=tk.Frame(self.projectoptionspanel, bd=1, relief=tk.SOLID)
-        tk.Label(self.projectoptionsinset, text='Project Options').pack(anchor='w')
+        self.projectoptionsinset=ttk.Frame(self.projectpanel, borderwidth=1, relief=tk.SOLID)
+        ttk.Label(self.projectoptionsinset, text='Project Options').pack(anchor='w')
         self.projectoptionscheckboxpanel=CheckBoxPanel(self.projectoptionsinset, mastervariable=self.optionsvar)
         self.projectoptionscheckboxpanel.checkboxnames=['Expand Parameters']
         self.projectoptionscheckboxpanel.update()
         self.projectoptionscheckboxpanel.pack()
 
-        #self.parametercheckboxframe=tk.Frame(self.projectoptionspanel)
-        #self.parametercheckboxframe.pack(side=tk.RIGHT)
+        self.checkboxpanel=CheckBoxPanel(self, mastervariable=self.changecolumn)
 
-        self.parametercheckboxpanel=CheckBoxPanel(self.projectoptionspanel,mastervariable=self.parametersvar)
+        self.parametercheckboxpanel=CheckBoxPanel(self, mastervariable=self.parametersvar)
         self.parametercheckboxpanelstatus=0
 
-    def options(self, varname, elementname, mode):
-        if self.optionsvar.get()=='Expand Parameters':
-            if self.parametercheckboxpanelstatus==0:
-                self.parametercheckboxpanel.pack(side=tk.RIGHT)
-                self.parametercheckboxpanelstatus=1
-                if 'parameters' in self.visibledata:
-                    self.visibledata.remove('parameters')
-                self.visibledata+=[element for element in self.parameters if element in self.parametercheckboxpanel.selectedboxes]
-                self.checkboxpanel.disable('parameters')
-                self.treepanel.update(self.visibledata)
-            else:
-                self.parametercheckboxpanel.pack_forget()
-                self.parametercheckboxpanelstatus=0
-                self.visibledata=[element for element in self.visibledata if element not in self.parameters]
-                if 'parameters' in self.checkboxpanel.selectedboxes:
-                    if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
-                        if self.standardcolumns.index('parameters') < self.standardcolumns.index(self.visibledata[0]):
-                            self.visibledata.insert(0,'parameters')
-                        else:
-                            for entry in self.visibledata:
-                                try:
-                                    if self.standardcolumns.index('parameters') < self.standardcolumns.index(entry):
-                                        selfvisibledata.insert(self.visibledata.index(entry),'parameters')
-                                        break
-                                except:
-                                    self.visibledata.insert(self.visibledata.index(entry),'parameters')
-                                    break
-                    else:
-                        self.visibledata.insert(0,'parameters')
-                self.treepanel.update(self.visibledata)
-                self.checkboxpanel.enable('parameters')
+        self.treepanel=TreeFrame(self)
+        self.treepanel.grid(row=1,column=0, sticky=(tk.N, tk.S, tk.E, tk.W), columnspan=5)
+
+        self.ButtonFrame=ttk.Frame(self)
+        self.okbutton=ttk.Button(self.ButtonFrame,text='OK', command=self.finish)
+        self.okbutton.grid(row=0, column=0)
+        self.exitbutton=ttk.Button(self.ButtonFrame,text='Exit', command=self.master.destroy)
+        self.exitbutton.grid(row=0,column=1)
+        self.ButtonFrame.grid(row=2, column=4, sticky=(tk.S, tk.E))
 
     def load_project(self, varname, elementname, mode):
         try:
@@ -462,13 +443,16 @@ class SumatraGui(tk.Frame):
             self.treepanel.displaycolumns=['']
             self.treepanel.data=['']
             self.treepanel.recreate()
-            self.checkboxpanel.pack_forget()
-            self.projectoptionsinset.pack_forget()
+            self.checkboxpanel.grid_forget()
+            self.parametercheckboxpanel.grid_forget()
+            self.projectoptionsinset.grid_forget()
+            self.projectoptionscheckboxpanel.unselectall()
         if self.project:
             if self.get_project_data() != 0:
-                self.projectoptionsinset.pack(side=tk.RIGHT, expand=True, fill=tk.X)
+                self.projectoptionsinset.grid(row=2, column=0, sticky=tk.NSEW)
                 self.process_data()
                 self.parametercheckboxpanel.checkboxnames=self.parameters
+                self.parametercheckboxpanel.selectedboxes=self.parameters
                 self.parametercheckboxpanel.update()
                 self.checkboxpanel.checkboxnames=[item for item in self.showdataheader if item not in self.parameters]
                 self.checkboxpanel.selectedboxes=list(self.standardcolumns)
@@ -477,17 +461,18 @@ class SumatraGui(tk.Frame):
                 self.treepanel.columns=self.showdataheader
                 self.treepanel.displaycolumns=self.visibledata
                 self.treepanel.data=list(zip(*self.showdata))
-                self.treepanel.pack_forget()
+                #self.treepanel.grid_forget()
                 self.treepanel.recreate()
-                self.checkboxpanel.pack(side=tk.LEFT, anchor='n')
-                self.treepanel.pack(fill=tk.BOTH, side=tk.RIGHT, expand=tk.Y)
+                self.checkboxpanel.grid(row=0,column=2)
             else:
                 self.treepanel.columns=['']
                 self.treepanel.displaycolumns=['']
                 self.treepanel.data=['']
                 self.treepanel.recreate()
-                self.checkboxpanel.pack_forget()
-                self.projectoptionsinset.pack_forget()
+                self.checkboxpanel.grid_forget()
+                self.parametercheckboxpanel.grid_forget()
+                self.projectoptionsinset.grid_forget()
+                self.projectoptionscheckboxpanel.unselectall()
 
     def get_project_data(self):
         try:
@@ -506,55 +491,6 @@ class SumatraGui(tk.Frame):
         self.projectdata=[np.array(self.records[i].__dict__.values())[self.datalist] for i in range(0,len(self.records))]
         self.datalabels=[element for element in self.datalabels if element not in self.removecolumns]
         return 1
-
-    def update_tree(self, varname, elementname, mode):
-        column = self.master.globalgetvar(varname)
-        comparecolumn=''
-        if not self.visibledata:
-            self.visibledata.append(column)
-        else:
-            if column in self.visibledata:
-                self.visibledata.remove(column)
-            else:
-                if column in self.parameters:
-                    if not set(self.parameters).isdisjoint(set(self.visibledata)):
-                        found=False
-                        for i in range(len(self.visibledata)):
-                            if self.visibledata[i] in self.parameters:
-                                if not found:
-                                    found=True
-                                if self.parameters.index(column) < self.parameters.index(self.visibledata[i]):
-                                    self.visibledata.insert(i,column)
-                                    break
-                            else:
-                                if found:
-                                    self.visibledata.insert(i,column)
-                                    break
-                    else:
-                        comparecolumn='parameters'
-                else:
-                    comparecolumn=column
-            if comparecolumn:
-                if comparecolumn in self.standardcolumns:#is it a standard element?
-                    if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
-                        inserted=False
-                        for entry in self.visibledata:
-                            try:
-                                if self.standardcolumns.index(comparecolumn) < self.standardcolumns.index(entry):
-                                    selfvisibledata.insert(self.visibledata.index(entry),column)
-                                    inserted=True
-                                    break
-                            except:
-                                self.visibledata.insert(self.visibledata.index(entry),column)
-                                inserted=True
-                                break
-                        if not inserted:
-                            self.visibledata.append(column)
-                    else:
-                        self.visibledata.insert(0,column)
-                else:
-                    self.visibledata.append(column)
-        self.treepanel.update(self.visibledata)
 
     def process_data(self):
         self.showdata=list(copy.deepcopy(self.projectdata))
@@ -657,6 +593,87 @@ class SumatraGui(tk.Frame):
                 swapindex=self.showdataheader.index(self.standardcolumns[i])
                 self.showdataheader[swapindex], self.showdataheader[i] = self.showdataheader[i], self.showdataheader[swapindex]
                 self.showdata[swapindex], self.showdata[i] = self.showdata[i], self.showdata[swapindex]
+
+    def update_tree(self, varname, elementname, mode):
+        column = self.master.globalgetvar(varname)
+        comparecolumn=''
+        if not self.visibledata:
+            self.visibledata.append(column)
+        else:
+            if column in self.visibledata:
+                self.visibledata.remove(column)
+            else:
+                if column in self.parameters:
+                    if not set(self.parameters).isdisjoint(set(self.visibledata)):
+                        found=False
+                        for i in range(len(self.visibledata)):
+                            if self.visibledata[i] in self.parameters:
+                                if not found:
+                                    found=True
+                                if self.parameters.index(column) < self.parameters.index(self.visibledata[i]):
+                                    self.visibledata.insert(i,column)
+                                    break
+                            else:
+                                if found:
+                                    self.visibledata.insert(i,column)
+                                    break
+                    else:
+                        comparecolumn='parameters'
+                else:
+                    comparecolumn=column
+            if comparecolumn:
+                if comparecolumn in self.standardcolumns:#is it a standard element?
+                    if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
+                        inserted=False
+                        for entry in self.visibledata:
+                            try:
+                                if self.standardcolumns.index(comparecolumn) < self.standardcolumns.index(entry):
+                                    selfvisibledata.insert(self.visibledata.index(entry),column)
+                                    inserted=True
+                                    break
+                            except:
+                                self.visibledata.insert(self.visibledata.index(entry),column)
+                                inserted=True
+                                break
+                        if not inserted:
+                            self.visibledata.append(column)
+                    else:
+                        self.visibledata.insert(0,column)
+                else:
+                    self.visibledata.append(column)
+        self.treepanel.update(self.visibledata)
+
+    def options(self, varname, elementname, mode):
+        if self.optionsvar.get()=='Expand Parameters':
+            if self.parametercheckboxpanelstatus==0:
+                self.parametercheckboxpanel.grid(row=0, column=3)
+                self.parametercheckboxpanelstatus=1
+                if 'parameters' in self.visibledata:
+                    self.visibledata.remove('parameters')
+                self.visibledata+=[element for element in self.parameters if element in self.parametercheckboxpanel.selectedboxes]
+                self.checkboxpanel.disable('parameters')
+                self.treepanel.update(self.visibledata)
+            else:
+                self.parametercheckboxpanel.grid_forget()
+                self.parametercheckboxpanelstatus=0
+                self.visibledata=[element for element in self.visibledata if element not in self.parameters]
+                if 'parameters' in self.checkboxpanel.selectedboxes:
+                    if self.visibledata[0] in self.standardcolumns: #are there standard elements shown right now?
+                        if self.standardcolumns.index('parameters') < self.standardcolumns.index(self.visibledata[0]):
+                            self.visibledata.insert(0,'parameters')
+                        else:
+                            for entry in self.visibledata:
+                                try:
+                                    if self.standardcolumns.index('parameters') < self.standardcolumns.index(entry):
+                                        selfvisibledata.insert(self.visibledata.index(entry),'parameters')
+                                        break
+                                except:
+                                    self.visibledata.insert(self.visibledata.index(entry),'parameters')
+                                    break
+                    else:
+                        self.visibledata.insert(0,'parameters')
+                self.treepanel.update(self.visibledata)
+                self.checkboxpanel.enable('parameters')
 
     def before_finish(self):
         # Here something that happens then the user presses ok should be implemented. Thoughts are that in the future records can be erase from the gui and stuff like that. Major changes like erasing records shouldbe done only temporariliy in the gui. After pressing ok, the major changes should be listed again and the user should be asked to confirm them again.

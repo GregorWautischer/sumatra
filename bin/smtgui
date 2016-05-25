@@ -6,7 +6,8 @@ Grafical user interface to the Sumatra computational experiment management tool.
 import sys
 from sumatra import __version__ as sumatraversion
 from sumatra.gui import SumatraGui, __version__
-
+import tkinter as tk
+from tkinter import ttk
 message = """
 
 Welcome to the graphical user interface to the Sumatra computation experiment management tool!
@@ -18,4 +19,10 @@ You are running Sumatra version %s.
 
 print(message)
 
-SumatraGui().mainloop()
+root=tk.Tk()
+root.title('Sumatra')
+root.columnconfigure(0, weight=1)
+root.rowconfigure(0, weight=1)
+mainframe=SumatraGui(root)
+mainframe.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
+root.mainloop()
