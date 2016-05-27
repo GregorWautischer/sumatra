@@ -495,6 +495,7 @@ class SumatraGui(ttk.Frame):
     def process_data(self):
         self.showdata=list(copy.deepcopy(self.projectdata))
         self.showdataheader=copy.deepcopy(self.datalabels)
+        '''
         if 'tags' in self.showdataheader:
 
             for element in self.showdata:
@@ -503,7 +504,7 @@ class SumatraGui(ttk.Frame):
 
                 else:
                     element[self.showdataheader.index('tags')]=' '.join(element[self.showdataheader.index('tags')])
-        '''
+
         if 'parameters' in self.showdataheader:
 
             for element in self.showdata:
@@ -566,6 +567,9 @@ class SumatraGui(ttk.Frame):
                     element[self.showdataheader.index('output_data')]=sets+[el for el in element[self.showdataheader.index('output_data')] if el not in allsubs]
 
         self.showdata=list(zip(*self.showdata))
+
+        if 'tags' in self.showdataheader:
+           self.showdata[self.showdataheader.index('tags')]=[' '.join(element) for element in self.showdata[self.showdataheader.index('tags')]]
 
         if 'parameters' in self.showdataheader:
             index = self.showdataheader.index('parameters')
