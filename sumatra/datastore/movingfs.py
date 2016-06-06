@@ -109,7 +109,11 @@ class MovingFileSystemDataStore(FileSystemDataStore):
         # Delete original files.
         if delete_originals:
             for file_path in files:
-                os.remove(os.path.join(self.root, file_path))
+                try:
+                    os.remove(os.path.join(self.root, file_path))
+                except:
+                    print("Could not remove file %s" % file_path)
+
         self._last_label = label # useful for testing
         return moveplace_paths
 
