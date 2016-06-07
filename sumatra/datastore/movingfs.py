@@ -14,6 +14,7 @@ import shutil
 import logging
 import mimetypes
 import datetime
+import warnings
 from contextlib import closing  # needed for Python 2.6
 from sumatra.core import TIMESTAMP_FORMAT, component
 
@@ -112,7 +113,7 @@ class MovingFileSystemDataStore(FileSystemDataStore):
                 try:
                     os.remove(os.path.join(self.root, file_path))
                 except:
-                    print("Could not remove file %s" % file_path)
+                    warnings.warn("Could not remove file %s" % file_path)
 
         self._last_label = label # useful for testing
         return moveplace_paths
