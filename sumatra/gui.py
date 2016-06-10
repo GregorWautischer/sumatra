@@ -584,13 +584,15 @@ class SumatraGui(ttk.Frame):
             self.parameters = list(set(self.parameters))
             self.showdataheader+=self.parameters
             self.showdata+=[['' for i in range(len(self.showdata[0]))] for j in range(len(self.parameters))]
-            self.showdata[18][0]='ha'
+            self.parametervalues=[[] for i in range(len(self.parameters))]
             for i in range(0,len(self.showdata[index])):
                 if self.showdata[index][i]:
                     dic=flatten_dict(self.showdata[index][i].as_dict())
                     params=dic.keys()
                     for j in range(0,len(params)):
                         self.showdata[self.showdataheader.index(params[j])][i]=str(dic[params[j]])
+                        if not str(dic[params[j]]) in self.parametervalues[self.parameters.index(params[j])]:
+                            self.parametervalues[self.parameters.index(params[j])].append(str(dic[params[j]]))
                     self.showdata[index][i]=', '.join('{} = {}'.format(key,val) for key, val in sorted(dic.items()))
         for i in range(0,len(self.standardcolumns)):
             if self.showdataheader[i]!=self.standardcolumns[i]:
