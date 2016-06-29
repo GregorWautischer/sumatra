@@ -6,6 +6,7 @@ import tkFileDialog
 import os, sys, inspect, string, copy, re
 import numpy as np
 import traceback
+import git
 
 __version__ = "0.0.1"
 
@@ -485,7 +486,7 @@ class SumatraGui(ttk.Frame):
             self.projectstatustext.set('Project "'+self.project.name+'" has no records to show!')
             return 0
         self.datalabels=self.records[0].__dict__.keys()
-        self.removecolumns=['platforms','repository','datastore','input_datastore','dependencies','stdout_stderr']
+        self.removecolumns=['platforms','repository','datastore','input_datastore']
 
         self.datalist=[self.datalabels.index(element) for element in self.datalabels if element not in self.removecolumns]
         self.projectdata=[np.array(self.records[i].__dict__.values())[self.datalist] for i in range(0,len(self.records))]
@@ -566,7 +567,10 @@ class SumatraGui(ttk.Frame):
                     allsubs=[item for sub in sets for item in sub]
                     element[self.showdataheader.index('output_data')]=sets+[el for el in element[self.showdataheader.index('output_data')] if el not in allsubs]
 
-        self.showdata=list(zip(*self.showdata))
+        self.showdata = list(zip(*self.showdata))
+
+        if 'dependencies' in self.showdataheader:
+            self.showdata[self.showdataheader.index('dependencies')] = [', '.join([str(el) for el in element]) for element in self.showdata[self.showdataheader.index('dependencies')]]
 
         if 'tags' in self.showdataheader:
            self.showdata[self.showdataheader.index('tags')]=[' '.join(element) for element in self.showdata[self.showdataheader.index('tags')]]
